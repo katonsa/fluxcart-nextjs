@@ -1,0 +1,248 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  // Domain relations
+  cart          Cart?
+  addresses     Address[]
+  orders        Order[]
+
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+// ============================================
+// CATEGORY
+// ============================================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  products    Product[]
+
+  @@map("categories")
+}
+
+// ============================================
+// PRODUCT
+// ============================================
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  imageUrls   String[]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive])
+  @@map("products")
+}
+
+// ============================================
+// CART
+// ============================================
+
+model Cart {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  userId    String?    @unique
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@map("cart_items")
+}
+// ============================================
+// ADDRESS
+// ============================================
+
+model Address {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  country      String   @default("US")
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders       Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ============================================
+// ORDER
+// ============================================
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  status      OrderStatus @default(PENDING)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  addressId   String
+  address     Address     @relation(fields: [addressId], references: [id])
+
+  items       OrderItem[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  quantity     Int
+  unitPrice    Decimal @db.Decimal(10, 2)
+  productName  String
+  productImage String?
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("order_items")
+}
