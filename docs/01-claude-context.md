@@ -32,7 +32,6 @@ RBAC, and full API documentation.
 
 > Note: the intended stack below is still the target architecture.
 > The current repo has drift in a few places, most notably:
-> - `next` in `package.json` is `16.1.7`, not `16.2.2`
 > - Vitest + Supertest are not yet installed
 > - Swagger tooling is not yet installed
 >
@@ -44,8 +43,8 @@ RBAC, and full API documentation.
 | Language | TypeScript | 5.x |
 | Auth | better-auth (admin plugin + RBAC) | latest |
 | ORM | Prisma | v7 |
-| Database | PostgreSQL | 16 |
-| Cache | Redis | 7 |
+| Database | PostgreSQL | 17 |
+| Cache | Redis | 8.6 |
 | Validation | Zod | v4.3.4 |
 | Logging | Pino | latest |
 | Testing | Vitest + Supertest | latest |
@@ -374,7 +373,6 @@ export const POST = withErrorHandler(
   - admin order status update
 
 ### Priority 2 — Stack Reconciliation
-- Upgrade `next` to the intended locked version
 - Install and wire Vitest + Supertest
 - Install and wire Swagger / OpenAPI tooling if it remains a project requirement
 

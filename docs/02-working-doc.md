@@ -43,7 +43,7 @@ This document records:
 - `npm run lint` passes
 
 ### Repo Snapshot
-- Documentation last reviewed against repo HEAD `8c2bb10`
+- Documentation last reviewed against repo HEAD `6940373`
 
 ---
 
@@ -139,8 +139,7 @@ Implementation note:
 These are still open and should be treated as planned follow-up:
 
 ### Stack / Dependency Drift
-- `docs/01-claude-context.md` locks Next.js `16.2.2`
-- `package.json` is still on Next.js `16.1.7`
+- `docs/01-claude-context.md` previously lagged behind the checked-in package versions and local service versions
 - Vitest + Supertest are still not installed
 - Swagger tooling is still not installed
 
@@ -173,11 +172,10 @@ Recommended next step:
 
 ## Recommended Next Tasks
 
-1. Reconcile `package.json` with the locked stack in `docs/01-claude-context.md`
-2. Add Vitest + Supertest and cover cart/order critical paths
-3. Decide whether to keep both the legacy dual-purpose `[id]` routes and the explicit `by-slug` routes, or consolidate on one approach
-4. Update `docs/01-claude-context.md` so it no longer misstates implementation progress
-5. Add Swagger / OpenAPI generation if that remains a portfolio requirement
+1. Add Vitest + Supertest and cover cart/order critical paths
+2. Decide whether to keep both the legacy dual-purpose `[id]` routes and the explicit `by-slug` routes, or consolidate on one approach
+3. Keep `docs/01-claude-context.md` aligned as implementation continues
+4. Add Swagger / OpenAPI generation if that remains a portfolio requirement
 
 ---
 
