@@ -1,15 +1,34 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PlusSignIcon, Delete02Icon, StarIcon } from "@hugeicons/core-free-icons"
 import type { AddressView, ApiResponse } from "@/lib/types/api"
+import type { AddressInput } from "@/lib/modules/users/user.schema"
+
+const EMPTY_FORM: AddressInput = {
+  fullName: "",
+  phone: "",
+  addressLine1: "",
+  addressLine2: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "US",
+  isDefault: false,
+}
 
 export default function AddressesPage() {
   const [addresses, setAddresses] = useState<AddressView[]>([])
   const [loading, setLoading] = useState(true)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [form, setForm] = useState<AddressInput>(EMPTY_FORM)
 
   const fetchAddresses = async () => {
     setLoading(true)
@@ -27,6 +46,51 @@ export default function AddressesPage() {
   useEffect(() => {
     void fetchAddresses()
   }, [])
+
+  const updateForm = <K extends keyof AddressInput>(key: K, value: AddressInput[K]) => {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  const resetForm = () => {
+    setForm({
+      ...EMPTY_FORM,
+      isDefault: addresses.length === 0,
+    })
+  }
+
+  const handleCreateOpenChange = (open: boolean) => {
+    setCreateOpen(open)
+    if (open) {
+      resetForm()
+    }
+  }
+
+  const handleCreateAddress = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setCreating(true)
+
+    try {
+      const res = await fetch("/api/users/me/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      const data = (await res.json()) as ApiResponse<AddressView>
+
+      if (data.success) {
+        toast.success("Address added")
+        setCreateOpen(false)
+        resetForm()
+        await fetchAddresses()
+      } else {
+        toast.error(data.message || "Failed to add address")
+      }
+    } catch {
+      toast.error("Error occurred")
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this address?")) return
@@ -65,11 +129,122 @@ export default function AddressesPage() {
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">My Addresses</h1>
-        <Button>
+        <Button onClick={() => handleCreateOpenChange(true)}>
           <HugeiconsIcon icon={PlusSignIcon} size={18} className="mr-2" />
           Add New
         </Button>
       </div>
+
+      <Dialog open={createOpen} onOpenChange={handleCreateOpenChange}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Add New Address</DialogTitle>
+            <DialogDescription>Save a delivery address for faster checkout.</DialogDescription>
+          </DialogHeader>
+
+          <form className="grid gap-4" onSubmit={handleCreateAddress}>
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                value={form.fullName}
+                onChange={(event) => updateForm("fullName", event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={form.phone}
+                onChange={(event) => updateForm("phone", event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="addressLine1">Address Line 1</Label>
+              <Input
+                id="addressLine1"
+                value={form.addressLine1}
+                onChange={(event) => updateForm("addressLine1", event.target.value)}
+                required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="addressLine2">Address Line 2</Label>
+              <Input
+                id="addressLine2"
+                value={form.addressLine2}
+                onChange={(event) => updateForm("addressLine2", event.target.value)}
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={form.city}
+                  onChange={(event) => updateForm("city", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="state">State</Label>
+                <Input
+                  id="state"
+                  value={form.state}
+                  onChange={(event) => updateForm("state", event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="postalCode">Postal Code</Label>
+                <Input
+                  id="postalCode"
+                  value={form.postalCode}
+                  onChange={(event) => updateForm("postalCode", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="country">Country</Label>
+                <Input
+                  id="country"
+                  value={form.country}
+                  onChange={(event) => updateForm("country", event.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <label className="flex items-center gap-3 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={form.isDefault}
+                onChange={(event) => updateForm("isDefault", event.target.checked)}
+                disabled={addresses.length === 0}
+              />
+              Set as default address
+            </label>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Saving..." : "Save Address"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-6 sm:grid-cols-2">
         {addresses.map(address => (
