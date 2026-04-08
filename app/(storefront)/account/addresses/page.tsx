@@ -1,6 +1,16 @@
 "use client"
 
 import { useEffect, useState, type FormEvent } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -28,6 +38,8 @@ export default function AddressesPage() {
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<AddressView | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [form, setForm] = useState<AddressInput>(EMPTY_FORM)
 
   const fetchAddresses = async () => {
@@ -92,19 +104,24 @@ export default function AddressesPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this address?")) return
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+
+    setDeleting(true)
     try {
-      const res = await fetch(`/api/users/me/addresses/${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/users/me/addresses/${deleteTarget.id}`, { method: "DELETE" })
       const data = (await res.json()) as ApiResponse<{ success: true }>
       if (data.success) {
         toast.success("Address deleted")
-        void fetchAddresses()
+        setDeleteTarget(null)
+        await fetchAddresses()
       } else {
         toast.error(data.message || "Failed to delete")
       }
     } catch {
       toast.error("Error occurred")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -246,6 +263,25 @@ export default function AddressesPage() {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this address?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget
+                ? `Remove the saved address for ${deleteTarget.fullName}. This action cannot be undone.`
+                : "Remove this saved address. This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Keep Address</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleting} onClick={handleDelete}>
+              {deleting ? "Deleting..." : "Delete Address"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="grid gap-6 sm:grid-cols-2">
         {addresses.map(address => (
           <div key={address.id} className={`relative rounded-xl border p-5 ${address.isDefault ? 'border-primary shadow-sm' : 'bg-card'}`}>
@@ -272,7 +308,12 @@ export default function AddressesPage() {
                   Set Default
                 </Button>
               )}
-              <Button variant="ghost" size="sm" className="text-destructive ml-auto" onClick={() => handleDelete(address.id)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto text-destructive"
+                onClick={() => setDeleteTarget(address)}
+              >
                 <HugeiconsIcon icon={Delete02Icon} size={16} className="mr-2" />
                 Delete
               </Button>

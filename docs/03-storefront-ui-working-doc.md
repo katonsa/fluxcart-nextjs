@@ -118,9 +118,6 @@ Current caveat:
   - delete address
   - mark address as default
 
-Current caveat:
-- address deletion still uses native `confirm()` instead of the shared alert dialog pattern
-
 ### Orders
 - [`app/(storefront)/orders/page.tsx`](../app/(storefront)/orders/page.tsx) supports:
   - list order history
@@ -188,9 +185,6 @@ This means several missing storefront interactions can likely be built without i
 
 These should be treated as planned follow-up, not as hidden regressions.
 
-### Native Confirm Still Present in Address Book
-- [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) still uses `confirm("Delete this address?")`
-
 ### Auth UX Could Be Clearer
 - account and checkout flows depend on runtime redirects or failed fetches
 - storefront does not yet provide a consistent customer-auth gate or dedicated unauthenticated empty state for protected pages
@@ -202,9 +196,8 @@ These should be treated as planned follow-up, not as hidden regressions.
 
 ## Recommended Next Tasks
 
-1. Replace native address deletion confirm with [`components/ui/alert-dialog.tsx`](../components/ui/alert-dialog.tsx).
-2. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
-3. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
+1. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
+2. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
 
 ---
 

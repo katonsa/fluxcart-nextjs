@@ -39,6 +39,7 @@ This document records:
 - Authenticated cart state now clears correctly after checkout because order creation also invalidates the Redis user-cart cache after deleting cart rows
 - Storefront cart state is now shared through SWR instead of a custom browser event helper, and `swr` is installed in the app dependencies
 - Order mutation responses now preserve the same full detail shape as order detail reads, preventing runtime crashes after admin status changes and customer cancellation
+- Storefront address deletion now uses the shared `AlertDialog` confirmation pattern instead of native `confirm()`
 - `npm run typecheck` passes
 - `npm run lint` passes
 
@@ -129,6 +130,7 @@ Implementation note:
 - Storefront product discovery now exposes URL-driven search on `/products`, including search result messaging and query preservation through category changes and pagination
 - Storefront product discovery now also exposes URL-driven `minPrice`, `maxPrice`, `inStock`, and `sortBy` controls on `/products`, and preserves the full query state through category changes and pagination
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
+- Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now also uses the shared alert dialog primitive for delete confirmation, with a pending state during destructive requests
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
 - Product management UI in [`app/(admin)/admin/products/page.tsx`](../app/(admin)/admin/products/page.tsx) now includes create and edit dialog flows, category selection, image URL parsing, and row-level soft delete handling against `/api/products` and `/api/products/:id`
 - Admin order detail UI in [`app/(admin)/admin/orders/[id]/page.tsx`](../app/(admin)/admin/orders/[id]/page.tsx) now uses shared card/select primitives and a structured detail layout instead of ad-hoc blocks and a native select
