@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
 import type { ApiResponse, CartView } from "@/lib/types/api"
+import { emitCartUpdated } from "@/lib/cart-events"
 
 export default function CartPage() {
   const [cart, setCart] = useState<CartView | null>(null)
@@ -38,7 +39,10 @@ export default function CartPage() {
         body: JSON.stringify({ quantity: newQuantity }),
       })
       const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) setCart(data.data)
+      if (data.success) {
+        setCart(data.data)
+        emitCartUpdated()
+      }
     } catch {
       toast.error("Error updating cart")
     }
@@ -48,7 +52,10 @@ export default function CartPage() {
     try {
       const res = await fetch(`/api/cart/items/${productId}`, { method: "DELETE" })
       const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) setCart(data.data)
+      if (data.success) {
+        setCart(data.data)
+        emitCartUpdated()
+      }
     } catch {
       toast.error("Error removing item")
     }

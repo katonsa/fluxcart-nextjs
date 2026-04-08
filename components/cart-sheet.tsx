@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import type { ApiResponse, CartView } from "@/lib/types/api"
+import { CART_UPDATED_EVENT, emitCartUpdated } from "@/lib/cart-events"
 
 export function CartSheet() {
   const [open, setOpen] = useState(false)
@@ -35,6 +36,17 @@ export function CartSheet() {
     }
   }, [open])
 
+  useEffect(() => {
+    const handleCartUpdated = () => {
+      void fetchCart()
+    }
+
+    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdated)
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdated)
+    }
+  }, [])
+
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return
     try {
@@ -44,7 +56,10 @@ export function CartSheet() {
         body: JSON.stringify({ quantity: newQuantity }),
       })
       const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) setCart(data.data)
+      if (data.success) {
+        setCart(data.data)
+        emitCartUpdated()
+      }
       else toast.error(data.message || "Failed to update quantity")
     } catch {
       toast.error("Error updating cart")
@@ -55,7 +70,10 @@ export function CartSheet() {
     try {
       const res = await fetch(`/api/cart/items/${productId}`, { method: "DELETE" })
       const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) setCart(data.data)
+      if (data.success) {
+        setCart(data.data)
+        emitCartUpdated()
+      }
     } catch {
       toast.error("Error removing item")
     }

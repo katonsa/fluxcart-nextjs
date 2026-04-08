@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { emitCartUpdated } from "@/lib/cart-events"
 import type { ApiResponse, CartView } from "@/lib/types/api"
 
 interface AddToCartButtonProps {
@@ -27,6 +28,7 @@ export function AddToCartButton({ productId, disabled, stock }: AddToCartButtonP
       
       if (data.success) {
         toast.success("Added to cart")
+        emitCartUpdated()
         router.refresh() // Refreshes server components to show latest cart state if exposed
       } else {
         toast.error(data.message || "Failed to add to cart")

@@ -93,7 +93,10 @@ export class OrderService {
       }
     })
 
-    await this.invalidateProductCaches(affectedSlugs)
+    await Promise.all([
+      this.invalidateProductCaches(affectedSlugs),
+      redis.del(RedisKeys.userCart(userId)),
+    ])
     return order
   }
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import type { AddressView, ApiResponse, CartView, OrderDetails } from "@/lib/types/api"
+import { emitCartUpdated } from "@/lib/cart-events"
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CartView | null>(null)
@@ -63,6 +64,7 @@ export default function CheckoutPage() {
       })
       const data = (await res.json()) as ApiResponse<OrderDetails>
       if (data.success) {
+        emitCartUpdated()
         toast.success("Order placed successfully!")
         router.push(`/orders/${data.data.id}`)
       } else {
