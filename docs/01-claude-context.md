@@ -21,7 +21,7 @@ RBAC, and full API documentation.
 | Phase 1 — Planning | ✅ Complete |
 | Phase 2 — Requirements | ✅ Complete |
 | Phase 3 — System Design | ✅ Complete |
-| Phase 4 — Implementation | 🔄 In Progress (core modules + routes implemented) |
+| Phase 4 — Implementation | 🔄 In Progress (core backend and key storefront/admin flows implemented) |
 | Phase 5 — Testing | ⏳ Pending |
 | Phase 6 — Deployment | ⏳ Pending |
 | Phase 7 — Documentation | 🔄 In Progress |
@@ -207,12 +207,15 @@ Implementation note:
 - `PATCH /api/admin/orders/:id/status` is expected to return the same nested detail shape as `GET /api/admin/orders/:id`, including `items`, `address`, and `user`.
 
 ### Route Implementation Note
-- Public category/product reads currently use `GET` on the same dynamic route folders as admin mutations:
-  - `app/api/categories/[id]/route.ts`
-  - `app/api/products/[id]/route.ts`
-- For `GET`, the dynamic segment is treated as a slug.
-- For `PATCH` / `DELETE`, the dynamic segment is treated as a database id.
-- This matches the API contract above, but the folder naming is implementation shorthand rather than ideal route naming.
+- The repo currently supports public category/product reads in two ways:
+  - legacy dual-purpose dynamic routes:
+    - `app/api/categories/[id]/route.ts`
+    - `app/api/products/[id]/route.ts`
+  - explicit slug routes:
+    - `app/api/categories/by-slug/[slug]/route.ts`
+    - `app/api/products/by-slug/[slug]/route.ts`
+- In the legacy `[id]` routes, `GET` treats the dynamic segment as a slug, while `PATCH` / `DELETE` treat it as a database id.
+- The explicit `by-slug` routes now coexist with the legacy shorthand, so the route structure is in transition rather than fully standardized.
 
 ---
 

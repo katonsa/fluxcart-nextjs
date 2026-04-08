@@ -42,8 +42,8 @@ This document records:
 - `npm run typecheck` passes
 - `npm run lint` passes
 
-### Last Fix Commit
-- `e6f9e21` — `Fix address creation flow and toast errors`
+### Repo Snapshot
+- Documentation last reviewed against repo HEAD `8c2bb10`
 
 ---
 
@@ -57,7 +57,9 @@ This document records:
 - `DELETE /api/categories/:id`
 
 Implementation note:
-- Public reads are handled by `GET` on [`app/api/categories/[id]/route.ts`](../app/api/categories/[id]/route.ts), where the dynamic segment is treated as a slug for `GET` and as an id for admin mutations.
+- Public reads currently work through both:
+  - [`app/api/categories/[id]/route.ts`](../app/api/categories/[id]/route.ts), where `GET` treats the dynamic segment as a slug and admin mutations treat it as an id
+  - [`app/api/categories/by-slug/[slug]/route.ts`](../app/api/categories/by-slug/[slug]/route.ts), which provides an explicit slug route
 
 ### Products
 - `GET /api/products`
@@ -68,7 +70,9 @@ Implementation note:
 - `PATCH /api/products/:id/inventory`
 
 Implementation note:
-- Public reads are handled by `GET` on [`app/api/products/[id]/route.ts`](../app/api/products/[id]/route.ts), where the dynamic segment is treated as a slug for `GET` and as an id for admin mutations.
+- Public reads currently work through both:
+  - [`app/api/products/[id]/route.ts`](../app/api/products/[id]/route.ts), where `GET` treats the dynamic segment as a slug and admin mutations treat it as an id
+  - [`app/api/products/by-slug/[slug]/route.ts`](../app/api/products/by-slug/[slug]/route.ts), which provides an explicit slug route
 
 ### Cart
 - `GET /api/cart`
@@ -171,7 +175,7 @@ Recommended next step:
 
 1. Reconcile `package.json` with the locked stack in `docs/01-claude-context.md`
 2. Add Vitest + Supertest and cover cart/order critical paths
-3. Decide whether to keep slug-read/id-mutate dual-purpose dynamic routes or split them into separate route folders
+3. Decide whether to keep both the legacy dual-purpose `[id]` routes and the explicit `by-slug` routes, or consolidate on one approach
 4. Update `docs/01-claude-context.md` so it no longer misstates implementation progress
 5. Add Swagger / OpenAPI generation if that remains a portfolio requirement
 
