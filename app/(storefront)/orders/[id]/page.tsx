@@ -1,5 +1,16 @@
 "use client"
 import { useEffect, useEffectEvent, useState, use } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { OrderStatusBadge } from "@/components/order-status-badge"
@@ -10,6 +21,8 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   const { id } = use(params)
   const [order, setOrder] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   const fetchOrder = useEffectEvent(async () => {
     try {
@@ -28,18 +41,21 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   }, [id])
 
   const handleCancel = async () => {
-    if (!confirm("Are you sure you want to cancel this order?")) return
+    setIsCancelling(true)
     try {
       const res = await fetch(`/api/orders/${id}/cancel`, { method: "PATCH" })
       const data = (await res.json()) as ApiResponse<OrderDetails>
       if (data.success) {
         setOrder(data.data)
+        setIsCancelDialogOpen(false)
         toast.success("Order cancelled")
       } else {
         toast.error(data.message || "Failed to cancel")
       }
     } catch {
       toast.error("Error cancelling order")
+    } finally {
+      setIsCancelling(false)
     }
   }
 
@@ -60,7 +76,29 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
            </div>
          </div>
          {canCancel && (
-           <Button variant="destructive" onClick={handleCancel}>Cancel Order</Button>
+           <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+             <AlertDialogTrigger asChild>
+               <Button variant="destructive">Cancel Order</Button>
+             </AlertDialogTrigger>
+             <AlertDialogContent>
+               <AlertDialogHeader>
+                 <AlertDialogTitle>Cancel this order?</AlertDialogTitle>
+                 <AlertDialogDescription>
+                   This action cannot be undone. Your order will be marked as cancelled immediately.
+                 </AlertDialogDescription>
+               </AlertDialogHeader>
+               <AlertDialogFooter>
+                 <AlertDialogCancel disabled={isCancelling}>Keep Order</AlertDialogCancel>
+                 <AlertDialogAction
+                   variant="destructive"
+                   disabled={isCancelling}
+                   onClick={handleCancel}
+                 >
+                   {isCancelling ? "Cancelling..." : "Yes, Cancel Order"}
+                 </AlertDialogAction>
+               </AlertDialogFooter>
+             </AlertDialogContent>
+           </AlertDialog>
          )}
       </div>
 
