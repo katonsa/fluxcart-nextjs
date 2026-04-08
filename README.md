@@ -2,6 +2,13 @@
 
 FluxCart is a Next.js 16 monolith for an e-commerce backend portfolio project. The app currently expects PostgreSQL for persistence and Redis for caching.
 
+## Project Docs
+
+- Current repository state: [`docs/02-working-doc.md`](./docs/02-working-doc.md)
+- Storefront UI state: [`docs/03-storefront-ui-working-doc.md`](./docs/03-storefront-ui-working-doc.md)
+- Product roadmap: [`docs/04-product-roadmap.md`](./docs/04-product-roadmap.md)
+- Product backlog: [`docs/05-product-backlog.md`](./docs/05-product-backlog.md)
+
 ## Development Services
 
 The repository includes a local Docker Compose stack in `compose.yaml` with:

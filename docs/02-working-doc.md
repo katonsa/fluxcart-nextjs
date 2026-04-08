@@ -14,6 +14,11 @@ This document records:
 - what remains to be done
 - what should be treated as follow-up instead of unresolved breakage
 
+Related planning docs:
+- [`docs/03-storefront-ui-working-doc.md`](./03-storefront-ui-working-doc.md)
+- [`docs/04-product-roadmap.md`](./04-product-roadmap.md)
+- [`docs/05-product-backlog.md`](./05-product-backlog.md)
+
 ---
 
 ## Current Status
@@ -180,6 +185,9 @@ Recommended next step:
 2. Decide whether to keep both the legacy dual-purpose `[id]` routes and the explicit `by-slug` routes, or consolidate on one approach
 3. Keep `docs/01-claude-context.md` aligned as implementation continues
 4. Add Swagger / OpenAPI generation if that remains a portfolio requirement
+
+Product-planning note:
+- the broader product roadmap and delivery backlog for post-MVP work now live in [`docs/04-product-roadmap.md`](./04-product-roadmap.md) and [`docs/05-product-backlog.md`](./05-product-backlog.md)
 
 ---
 
