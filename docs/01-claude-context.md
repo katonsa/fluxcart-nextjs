@@ -21,14 +21,22 @@ RBAC, and full API documentation.
 | Phase 1 — Planning | ✅ Complete |
 | Phase 2 — Requirements | ✅ Complete |
 | Phase 3 — System Design | ✅ Complete |
-| Phase 4 — Implementation | 🔄 In Progress (Step 1 done) |
+| Phase 4 — Implementation | 🔄 In Progress (core modules + routes implemented) |
 | Phase 5 — Testing | ⏳ Pending |
 | Phase 6 — Deployment | ⏳ Pending |
-| Phase 7 — Documentation | ⏳ Pending |
+| Phase 7 — Documentation | 🔄 In Progress |
 
 ---
 
 ## ✅ Locked Tech Stack
+
+> Note: the intended stack below is still the target architecture.
+> The current repo has drift in a few places, most notably:
+> - `next` in `package.json` is `16.1.7`, not `16.2.2`
+> - Vitest + Supertest are not yet installed
+> - Swagger tooling is not yet installed
+>
+> See `docs/02-working-doc.md` for the current repository truth.
 
 | Layer | Choice | Version |
 |---|---|---|
@@ -187,8 +195,17 @@ Query params: `?page, limit, category, minPrice, maxPrice, search, inStock, sort
 | Method | Endpoint | Access |
 |---|---|---|
 | GET | `/api/admin/orders` | Admin |
+| GET | `/api/admin/orders/:id` | Admin |
 | PATCH | `/api/admin/orders/:id/status` | Admin |
 | GET | `/api/admin/stats` | Admin |
+
+### Route Implementation Note
+- Public category/product reads currently use `GET` on the same dynamic route folders as admin mutations:
+  - `app/api/categories/[id]/route.ts`
+  - `app/api/products/[id]/route.ts`
+- For `GET`, the dynamic segment is treated as a slug.
+- For `PATCH` / `DELETE`, the dynamic segment is treated as a database id.
+- This matches the API contract above, but the folder naming is implementation shorthand rather than ideal route naming.
 
 ---
 
@@ -198,13 +215,13 @@ Query params: `?page, limit, category, minPrice, maxPrice, search, inStock, sort
 fluxcart/
 ├── app/
 │   ├── api/
-│   │   ├── auth/[...all]/route.ts       ⏳ Step 2 — next to build
-│   │   ├── users/me/**                  ⏳ Step 7
-│   │   ├── categories/**                ⏳ Step 3
-│   │   ├── products/**                  ⏳ Step 4
-│   │   ├── cart/**                      ⏳ Step 5
-│   │   ├── orders/**                    ⏳ Step 6
-│   │   └── admin/**                     ⏳ Step 8
+│   │   ├── auth/[...all]/route.ts       ✅ implemented
+│   │   ├── users/me/**                  ✅ implemented
+│   │   ├── categories/**                ✅ implemented
+│   │   ├── products/**                  ✅ implemented
+│   │   ├── cart/**                      ✅ implemented
+│   │   ├── orders/**                    ✅ implemented
+│   │   └── admin/**                     ✅ implemented
 │   ├── page.tsx
 │   ├── layout.tsx
 │   └── globals.css
@@ -221,15 +238,16 @@ fluxcart/
 │   │   ├── response.ts     ✅ ok, created, notFound, etc.
 │   │   ├── errors.ts       ✅ ApiError class + withErrorHandler
 │   │   └── middleware.ts   ✅ requireAuth, requireAdmin, requirePermission
-│   ├── modules/            ⏳ service layer (not yet created)
-│   │   ├── users/
-│   │   ├── categories/
-│   │   ├── products/
-│   │   ├── cart/
-│   │   └── orders/
+│   ├── modules/            ✅ service layer implemented
+│   │   ├── users/          ✅
+│   │   ├── categories/     ✅
+│   │   ├── products/       ✅
+│   │   ├── cart/           ✅
+│   │   └── orders/         ✅
 │   ├── generated/prisma/   ✅ Prisma v7 generated client
 │   ├── db.ts               ✅ Prisma client singleton (PrismaPg)
 │   ├── redis.ts            ✅ ioredis singleton + RedisKeys + RedisTTL
+│   ├── types/api.ts        ✅ shared API view types
 │   └── utils.ts
 ├── prisma/
 │   └── schema.prisma       ✅ Final schema
@@ -307,8 +325,9 @@ export const auth = betterAuth({
    - Guest cart → Redis only (key: `fluxcart:cart:guest:{sessionId}`)
    - Auth cart → DB (source of truth) + Redis cache (key: `fluxcart:cart:user:{userId}`)
    - Merge on login → `POST /api/cart/merge`
+   - Item mutations use `productId`, not `cartItem.id`
 
-6. **Checkout is a Prisma transaction** — stock validation, decrement, order creation, cart clear — all atomic. Use `db.$transaction()`.
+6. **Checkout is a Prisma transaction** — stock validation, row lock, decrement, order creation, cart clear — all atomic. Use `db.$transaction()`.
 
 7. **OrderItem price snapshot** — always copy `product.price`, `product.name`, `product.imageUrls[0]` at time of order. Never reference live product price from order history.
 
@@ -330,49 +349,29 @@ export const POST = withErrorHandler(
 
 ---
 
-## ⏭️ What to Build Next (Phase 4 — Implementation)
+## ⏭️ What to Build Next
 
-### Step 2 — Auth Route (next immediate task)
-Create `app/api/auth/[...all]/route.ts`:
-```ts
-import { auth } from "@/lib/auth"
-import { toNextJsHandler } from "better-auth/next-js"
+### Priority 1 — Testing
+- Add Vitest for service-level tests
+- Add Supertest or route-level integration coverage for:
+  - guest cart add/update/remove
+  - guest-to-user cart merge
+  - checkout transaction behavior
+  - customer cancel restrictions
+  - admin order status update
 
-export const { GET, POST } = toNextJsHandler(auth)
-```
+### Priority 2 — Stack Reconciliation
+- Upgrade `next` to the intended locked version
+- Install and wire Vitest + Supertest
+- Install and wire Swagger / OpenAPI tooling if it remains a project requirement
 
-### Step 3 — Categories Module
-Files to create:
-- `lib/modules/categories/category.schema.ts` — Zod v4 schemas
-- `lib/modules/categories/category.service.ts` — service layer
-- `app/api/categories/route.ts` — GET list, POST (admin)
-- `app/api/categories/[slug]/route.ts` — GET single
+### Priority 3 — Documentation Cleanup
+- Keep `docs/01-claude-context.md` and `docs/02-working-doc.md` synchronized
+- Decide whether this file remains the long-term source of truth or a higher-level architecture doc
 
-### Step 4 — Products Module
-Files to create:
-- `lib/modules/products/product.schema.ts`
-- `lib/modules/products/product.service.ts`
-- `app/api/products/route.ts`
-- `app/api/products/[slug]/route.ts`
-- `app/api/products/[id]/inventory/route.ts`
-
-### Step 5 — Cart Module (most complex)
-- Guest cart in Redis, auth cart in DB + Redis
-- Merge flow on login
-- Atomic operations for stock check
-
-### Step 6 — Orders Module
-- Checkout as `db.$transaction()`
-- Stock decrement with row-level lock
-- Price snapshot on OrderItem
-
-### Step 7 — Users Module
-- Profile CRUD
-- Address management
-
-### Step 8 — Admin Routes
-- Thin wrappers over existing services
-- Stats aggregation query
+### Priority 4 — Route / Structure Cleanup
+- Consider splitting slug-read and id-mutate routes into distinct folders for clarity
+- Preserve the external API contract if route internals are reorganized
 
 ---
 
