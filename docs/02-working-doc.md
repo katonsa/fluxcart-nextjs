@@ -35,6 +35,7 @@ This document records:
 - Global toast notifications are now mounted in the root layout, so async failures such as offline address submission are visible to the user
 - `/cart` and the cart sheet checkout CTAs now route directly to `/checkout`
 - Product stock now refreshes correctly after checkout and order cancellation because order-side product caches are invalidated after stock changes
+- Order mutation responses now preserve the same full detail shape as order detail reads, preventing runtime crashes after admin status changes and customer cancellation
 - `npm run typecheck` passes
 - `npm run lint` passes
 
@@ -108,6 +109,9 @@ Implementation note:
 - Successful checkout and customer cancellation now invalidate affected Redis product detail/list caches after stock changes
 - Customer cancellation is limited to `PENDING`
 - Admin order status input is schema-validated in [`lib/modules/orders/order.schema.ts`](../lib/modules/orders/order.schema.ts)
+- Order mutation endpoints used by detail pages now return the same nested shape as their corresponding `GET` endpoints:
+  - customer cancel includes `items` and `address`
+  - admin status update includes `items`, `address`, and `user`
 
 ### Frontend
 - Storefront cart UI now calls `/api/cart/items/:productId`

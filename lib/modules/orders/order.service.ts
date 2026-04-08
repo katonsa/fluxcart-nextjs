@@ -137,6 +137,7 @@ export class OrderService {
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: { status: "CANCELLED" },
+        include: { items: true, address: true },
       })
 
       const affectedProducts = await tx.product.findMany({
@@ -176,6 +177,7 @@ export class OrderService {
     return db.order.update({
       where: { id: orderId },
       data: { status: data.status },
+      include: { items: true, address: true, user: { select: { name: true, email: true } } },
     })
   }
 

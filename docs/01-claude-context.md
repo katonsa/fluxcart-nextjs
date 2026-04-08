@@ -191,6 +191,9 @@ Query params: `?page, limit, category, minPrice, maxPrice, search, inStock, sort
 | POST | `/api/orders` | Customer (checkout) |
 | PATCH | `/api/orders/:id/cancel` | Customer (PENDING only) |
 
+Implementation note:
+- Order detail mutations that feed UI detail pages are expected to return the same nested shape as `GET /api/orders/:id`, including `items` and `address`.
+
 ### Admin `/api/admin/**`
 | Method | Endpoint | Access |
 |---|---|---|
@@ -198,6 +201,9 @@ Query params: `?page, limit, category, minPrice, maxPrice, search, inStock, sort
 | GET | `/api/admin/orders/:id` | Admin |
 | PATCH | `/api/admin/orders/:id/status` | Admin |
 | GET | `/api/admin/stats` | Admin |
+
+Implementation note:
+- `PATCH /api/admin/orders/:id/status` is expected to return the same nested detail shape as `GET /api/admin/orders/:id`, including `items`, `address`, and `user`.
 
 ### Route Implementation Note
 - Public category/product reads currently use `GET` on the same dynamic route folders as admin mutations:
