@@ -1,6 +1,9 @@
 "use client"
+
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { OrderStatusBadge } from "@/components/order-status-badge"
 import type { AdminOrderSummary, ApiResponse } from "@/lib/types/api"
 
@@ -20,47 +23,61 @@ export default function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
       </div>
 
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th className="px-6 py-4 font-medium text-muted-foreground">Order ID</th>
-                <th className="px-6 py-4 font-medium text-muted-foreground">Customer</th>
-                <th className="px-6 py-4 font-medium text-muted-foreground">Date</th>
-                <th className="px-6 py-4 font-medium text-muted-foreground">Total</th>
-                <th className="px-6 py-4 font-medium text-muted-foreground">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y relative">
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">Loading orders...</td>
-                </tr>
-              ) : orders.map((order) => (
-                <tr key={order.id} className="hover:bg-muted/50 transition-colors">
-                  <td className="px-6 py-4 font-medium">#{order.id.slice(-8).toUpperCase()}</td>
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-foreground">{order.user.name}</p>
-                    <p className="text-xs text-muted-foreground">{order.user.email}</p>
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 font-medium">${Number(order.totalAmount).toFixed(2)}</td>
-                  <td className="px-6 py-4"><OrderStatusBadge status={order.status} /></td>
-                  <td className="px-6 py-4 text-right">
-                    <Link href={`/admin/orders/${order.id}`} className="text-primary font-medium hover:underline">
-                      Manage
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <div className="rounded-md border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order ID</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Total</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  Loading orders...
+                </TableCell>
+              </TableRow>
+            ) : orders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                  No orders found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-medium">#{order.id.slice(-8).toUpperCase()}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium text-foreground">{order.user.name}</p>
+                      <p className="text-xs text-muted-foreground">{order.user.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="font-medium">${Number(order.totalAmount).toFixed(2)}</TableCell>
+                  <TableCell>
+                    <OrderStatusBadge status={order.status} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href={`/admin/orders/${order.id}`}>Manage</Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   )
