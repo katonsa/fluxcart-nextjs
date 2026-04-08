@@ -193,6 +193,7 @@ Query params: `?page, limit, category, minPrice, maxPrice, search, inStock, sort
 
 Implementation note:
 - Order detail mutations that feed UI detail pages are expected to return the same nested shape as `GET /api/orders/:id`, including `items` and `address`.
+- Successful checkout also invalidates the authenticated Redis cart cache after cart rows are deleted, so `/api/cart` does not serve stale ordered items.
 
 ### Admin `/api/admin/**`
 | Method | Endpoint | Access |
@@ -251,6 +252,8 @@ fluxcart/
 │   │   ├── cart/           ✅
 │   │   └── orders/         ✅
 │   ├── generated/prisma/   ✅ Prisma v7 generated client
+│   ├── hooks/
+│   │   └── use-cart.ts     ✅ SWR-based shared cart client state
 │   ├── db.ts               ✅ Prisma client singleton (PrismaPg)
 │   ├── redis.ts            ✅ ioredis singleton + RedisKeys + RedisTTL
 │   ├── types/api.ts        ✅ shared API view types
@@ -332,8 +335,9 @@ export const auth = betterAuth({
    - Auth cart → DB (source of truth) + Redis cache (key: `fluxcart:cart:user:{userId}`)
    - Merge on login → `POST /api/cart/merge`
    - Item mutations use `productId`, not `cartItem.id`
+   - Storefront client cart state is shared via SWR over `/api/cart`, not custom browser events
 
-6. **Checkout is a Prisma transaction** — stock validation, row lock, decrement, order creation, cart clear — all atomic. Use `db.$transaction()`.
+6. **Checkout is a Prisma transaction** — stock validation, row lock, decrement, order creation, cart clear, and auth cart cache invalidation — all atomic/consistent at the request level. Use `db.$transaction()` and invalidate `RedisKeys.userCart(userId)` after success.
 
 7. **OrderItem price snapshot** — always copy `product.price`, `product.name`, `product.imageUrls[0]` at time of order. Never reference live product price from order history.
 
