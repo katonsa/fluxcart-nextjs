@@ -57,11 +57,15 @@ Current caveat:
   - server-rendered product listing
   - category filtering from `searchParams`
   - product search via `searchParams.search`
+  - price range filtering via `searchParams.minPrice` and `searchParams.maxPrice`
+  - in-stock-only filtering via `searchParams.inStock`
+  - sort selection via `searchParams.sortBy`
   - search form submission from the products page
   - search result count and search-state messaging
   - pagination
   - product count display
   - empty state when no products match
+  - stable query preservation through category changes and pagination
 - [`app/(storefront)/categories/[slug]/page.tsx`](../app/(storefront)/categories/[slug]/page.tsx) renders a category-specific grid
 - [`components/product-card.tsx`](../components/product-card.tsx) is the main reusable browsing card
 
@@ -150,11 +154,14 @@ Conclusion:
 ### Product Filters
 - Current storefront product filtering only exposes category filtering
 - API-level params documented elsewhere but not exposed in the listing UI include:
-  - `search`
-  - `minPrice`
-  - `maxPrice`
-  - `inStock`
-  - `sortBy` beyond the default service behavior
+  - none for current public browse controls
+
+Implemented storefront exposure now includes:
+- `search`
+- `minPrice`
+- `maxPrice`
+- `inStock`
+- `sortBy`
 
 ---
 
@@ -181,20 +188,12 @@ This means several missing storefront interactions can likely be built without i
 
 These should be treated as planned follow-up, not as hidden regressions.
 
-### Missing Filter/Sort Controls
-- products page only exposes category filtering
-- there is no UI for price range, stock filtering, or sort selection
-
 ### Native Confirm Still Present in Address Book
 - [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) still uses `confirm("Delete this address?")`
 
 ### Auth UX Could Be Clearer
 - account and checkout flows depend on runtime redirects or failed fetches
 - storefront does not yet provide a consistent customer-auth gate or dedicated unauthenticated empty state for protected pages
-
-### Product Listing Query-State Support Is Partial
-- `/products` preserves `category` and `search` during pagination and category changes
-- it still does not preserve future filter params because they are not yet part of the page state model
 
 ### Copy / Documentation Drift
 - home page still contains a stale “placeholder until categories API is wired” comment
@@ -204,9 +203,8 @@ These should be treated as planned follow-up, not as hidden regressions.
 ## Recommended Next Tasks
 
 1. Replace native address deletion confirm with [`components/ui/alert-dialog.tsx`](../components/ui/alert-dialog.tsx).
-2. Add explicit sort and filter controls to the products page and keep query params stable through pagination.
-3. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
-4. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
+2. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
+3. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
 
 ---
 

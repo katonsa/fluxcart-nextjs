@@ -127,6 +127,7 @@ Implementation note:
 - Client cart surfaces now share `/api/cart` state through SWR, so cart mutations update the navbar cart sheet and cart page through a single cache instead of browser events
 - Storefront/admin pages were typed against shared API view models in [`lib/types/api.ts`](../lib/types/api.ts)
 - Storefront product discovery now exposes URL-driven search on `/products`, including search result messaging and query preservation through category changes and pagination
+- Storefront product discovery now also exposes URL-driven `minPrice`, `maxPrice`, `inStock`, and `sortBy` controls on `/products`, and preserves the full query state through category changes and pagination
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
 - Product management UI in [`app/(admin)/admin/products/page.tsx`](../app/(admin)/admin/products/page.tsx) now includes create and edit dialog flows, category selection, image URL parsing, and row-level soft delete handling against `/api/products` and `/api/products/:id`
