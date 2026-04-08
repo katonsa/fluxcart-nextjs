@@ -7,6 +7,12 @@ import { UpdateCategorySchema } from "@/lib/modules/categories/category.schema"
 
 type Params = Promise<{ id: string }>
 
+export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: Params }) => {
+  const { id: slug } = await params
+  const category = await categoryService.getBySlug(slug)
+  return ok(category)
+})
+
 export const PATCH = withErrorHandler(
   requirePermission("category", ["update"])(async (ctx, req: NextRequest, { params }: { params: Params }) => {
     const { id } = await params

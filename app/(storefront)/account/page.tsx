@@ -7,17 +7,18 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { authClient } from "@/lib/auth/client"
 import { useRouter } from "next/navigation"
+import type { ApiResponse, ProfileView } from "@/lib/types/api"
 
 export default function AccountPage() {
-  const [profile, setProfile] = useState<any>(null)
+  const [profile, setProfile] = useState<ProfileView | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
     fetch("/api/users/me")
-      .then(res => res.json())
-      .then(res => {
+      .then((res) => res.json() as Promise<ApiResponse<ProfileView>>)
+      .then((res) => {
         if (res.success) {
           setProfile(res.data)
         } else {
@@ -28,8 +29,9 @@ export default function AccountPage() {
       .finally(() => setLoading(false))
   }, [router])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!profile) return
     setSaving(true)
     
     try {
@@ -38,13 +40,14 @@ export default function AccountPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: profile.name })
       })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<ProfileView>
       if (data.success) {
+        setProfile(data.data)
         toast.success("Profile updated successfully")
       } else {
         toast.error(data.message || "Failed to update profile")
       }
-    } catch (e) {
+    } catch {
       toast.error("An error occurred")
     } finally {
       setSaving(false)

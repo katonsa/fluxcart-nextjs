@@ -1,36 +1,40 @@
 "use client"
-import { useEffect, useState, use } from "react"
+import { useEffect, useEffectEvent, useState, use } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { OrderStatusBadge } from "@/components/order-status-badge"
 import { toast } from "sonner"
+import type { ApiResponse, OrderDetails } from "@/lib/types/api"
 
 export default function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const [order, setOrder] = useState<any>(null)
+  const [order, setOrder] = useState<OrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchOrder = () => {
-    fetch(`/api/orders/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) setOrder(data.data)
-      })
-      .finally(() => setLoading(false))
-  }
+  const fetchOrder = useEffectEvent(async () => {
+    try {
+      const res = await fetch(`/api/orders/${id}`)
+      const data = (await res.json()) as ApiResponse<OrderDetails>
+      if (data.success) {
+        setOrder(data.data)
+      }
+    } finally {
+      setLoading(false)
+    }
+  })
 
   useEffect(() => {
-    fetchOrder()
+    void fetchOrder()
   }, [id])
 
   const handleCancel = async () => {
     if (!confirm("Are you sure you want to cancel this order?")) return
     try {
       const res = await fetch(`/api/orders/${id}/cancel`, { method: "PATCH" })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<OrderDetails>
       if (data.success) {
+        setOrder(data.data)
         toast.success("Order cancelled")
-        fetchOrder()
       } else {
         toast.error(data.message || "Failed to cancel")
       }
@@ -42,7 +46,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
   if (loading) return <div className="p-12 text-center text-muted-foreground">Loading order details...</div>
   if (!order) return <div className="p-12 text-center">Order not found</div>
 
-  const canCancel = order.status === "PENDING" || order.status === "PROCESSING"
+  const canCancel = order.status === "PENDING"
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -65,7 +69,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ id: str
             <div className="rounded-xl border bg-card p-6 shadow-sm">
                <h2 className="text-lg font-semibold border-b pb-4 mb-4">Items Ordered</h2>
                <div className="space-y-6">
-                  {order.items.map((item: any) => (
+                  {order.items.map((item) => (
                     <div key={item.id} className="flex gap-4">
                       <div className="h-20 w-20 flex-shrink-0 bg-muted rounded-md border flex items-center justify-center overflow-hidden">
                         {item.productImage ? (

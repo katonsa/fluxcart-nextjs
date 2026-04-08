@@ -6,15 +6,14 @@ import { requireAuth } from "@/lib/api/middleware"
 
 export const POST = withErrorHandler(
   requireAuth(async (ctx, req: NextRequest) => {
-    const cartId = req.cookies.get("cart_session")?.value
+    const sessionId = req.cookies.get("cart_session")?.value
     
-    if (!cartId) {
-       return ok({ message: "No guest cart to merge" })
+    if (!sessionId) {
+      return ok({ message: "No guest cart to merge" })
     }
 
-    const cart = await cartService.mergeCarts(cartId, ctx.user.id)
+    const cart = await cartService.mergeCarts(sessionId, ctx.user.id)
     
-    // Return response but clear the cart_session cookie
     const response = NextResponse.json({ success: true, data: cart })
     response.cookies.delete("cart_session")
     

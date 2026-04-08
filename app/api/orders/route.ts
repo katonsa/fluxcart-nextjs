@@ -6,7 +6,7 @@ import { orderService } from "@/lib/modules/orders/order.service"
 import { CreateOrderSchema } from "@/lib/modules/orders/order.schema"
 
 export const GET = withErrorHandler(
-  requireAuth(async (ctx, req: NextRequest) => {
+  requireAuth(async (ctx) => {
     const orders = await orderService.list(ctx.user.id)
     return ok(orders)
   })

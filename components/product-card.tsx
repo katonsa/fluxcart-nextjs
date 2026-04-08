@@ -3,17 +3,19 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { Image01Icon } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 
+import type { DecimalLike } from "@/lib/types/api"
+
 interface ProductCardProps {
   product: {
     id: string
     name: string
     slug: string
-    price: string | number
+    price: DecimalLike
     stock: number
     imageUrls: string[]
     category?: {
       name: string
-    }
+    } | null
   }
 }
 

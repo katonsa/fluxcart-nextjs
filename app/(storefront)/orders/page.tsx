@@ -3,15 +3,16 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { OrderStatusBadge } from "@/components/order-status-badge"
+import type { ApiResponse, OrderSummary } from "@/lib/types/api"
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<OrderSummary[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch("/api/orders")
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json() as Promise<ApiResponse<OrderSummary[]>>)
+      .then((data) => {
         if (data.success) setOrders(data.data)
       })
       .finally(() => setLoading(false))
@@ -57,7 +58,7 @@ export default function OrdersPage() {
                  </div>
                  
                  <div className="flex -space-x-4">
-                   {order.items.slice(0, 5).map((item: any) => (
+                   {order.items.slice(0, 5).map((item) => (
                      item.productImage ? (
                        /* eslint-disable-next-line @next/next/no-img-element */
                        <img key={item.id} src={item.productImage} alt={item.productName} className="h-12 w-12 rounded-full border-2 border-background bg-muted object-cover" />

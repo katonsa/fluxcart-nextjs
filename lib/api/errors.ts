@@ -50,7 +50,9 @@ export class ApiError extends Error {
 // ZodError, and unexpected errors uniformly
 // ============================================
 
-export function withErrorHandler<T extends any[]>(handler: (...args: T) => Promise<Response>): (...args: T) => Promise<Response> {
+export function withErrorHandler<T extends unknown[]>(
+  handler: (...args: T) => Promise<Response>,
+): (...args: T) => Promise<Response> {
   return async (...args: T) => {
     try {
       return await handler(...args)

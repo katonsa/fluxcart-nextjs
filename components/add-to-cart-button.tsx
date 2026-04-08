@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import type { ApiResponse, CartView } from "@/lib/types/api"
 
 interface AddToCartButtonProps {
   productId: string
@@ -17,18 +18,16 @@ export function AddToCartButton({ productId, disabled, stock }: AddToCartButtonP
   const handleAddToCart = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/cart", {
+      const res = await fetch("/api/cart/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, quantity: 1 })
+        body: JSON.stringify({ productId, quantity: 1 }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<CartView>
       
       if (data.success) {
         toast.success("Added to cart")
         router.refresh() // Refreshes server components to show latest cart state if exposed
-        // Ideally emit an event or use context so CartSheet knows to update,
-        // Since we are using simple fetch, CartSheet updates when opened.
       } else {
         toast.error(data.message || "Failed to add to cart")
       }

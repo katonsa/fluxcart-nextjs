@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { categoryService } from "@/lib/modules/categories/category.service"
 import { productService } from "@/lib/modules/products/product.service"
 import { ProductCard } from "@/components/product-card"
+import type { ProductSummary } from "@/lib/types/api"
 
 type Params = Promise<{ slug: string }>
 
@@ -11,7 +12,7 @@ export default async function CategoryPage({ params }: { params: Params }) {
 
   try {
     category = await categoryService.getBySlug(slug)
-  } catch (e) {
+  } catch {
     notFound()
   }
 
@@ -28,8 +29,8 @@ export default async function CategoryPage({ params }: { params: Params }) {
       
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {products.length > 0 ? (
-          products.map((product: any) => (
-            <ProductCard key={product.id} product={product as any} />
+          products.map((product: ProductSummary) => (
+            <ProductCard key={product.id} product={product} />
           ))
         ) : (
           <p className="col-span-full text-muted-foreground">No products found in this category.</p>

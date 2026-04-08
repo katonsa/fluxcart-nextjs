@@ -6,7 +6,7 @@ import { userService } from "@/lib/modules/users/user.service"
 import { CreateAddressSchema } from "@/lib/modules/users/user.schema"
 
 export const GET = withErrorHandler(
-  requireAuth(async (ctx, req: NextRequest) => {
+  requireAuth(async (ctx) => {
     const addresses = await userService.listAddresses(ctx.user.id)
     return ok(addresses)
   })

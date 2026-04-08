@@ -3,31 +3,45 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import type { AddressView, ApiResponse, CartView, OrderDetails } from "@/lib/types/api"
 
 export default function CheckoutPage() {
-  const [cart, setCart] = useState<any>(null)
-  const [addresses, setAddresses] = useState<any[]>([])
+  const [cart, setCart] = useState<CartView | null>(null)
+  const [addresses, setAddresses] = useState<AddressView[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState("")
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/cart").then(res => res.json()),
-      fetch("/api/users/me/addresses").then(res => res.json())
-    ])
-    .then(([cartRes, addressesRes]) => {
-      if (cartRes.success) setCart(cartRes.data)
-      if (addressesRes.success) {
-        setAddresses(addressesRes.data)
-        const defaultAddr = addressesRes.data.find((a: any) => a.isDefault)
-        if (defaultAddr) setSelectedAddressId(defaultAddr.id)
-        else if (addressesRes.data.length > 0) setSelectedAddressId(addressesRes.data[0].id)
+    const loadCheckout = async () => {
+      try {
+        const [cartRes, addressesRes] = await Promise.all([
+          fetch("/api/cart").then((res) => res.json() as Promise<ApiResponse<CartView>>),
+          fetch("/api/users/me/addresses").then((res) => res.json() as Promise<ApiResponse<AddressView[]>>),
+        ])
+
+        if (cartRes.success) {
+          setCart(cartRes.data)
+        }
+
+        if (addressesRes.success) {
+          setAddresses(addressesRes.data)
+          const defaultAddress = addressesRes.data.find((address) => address.isDefault)
+          if (defaultAddress) {
+            setSelectedAddressId(defaultAddress.id)
+          } else if (addressesRes.data.length > 0) {
+            setSelectedAddressId(addressesRes.data[0].id)
+          }
+        }
+      } catch {
+        toast.error("Failed to load checkout data")
+      } finally {
+        setLoading(false)
       }
-    })
-    .catch(() => toast.error("Failed to load checkout data"))
-    .finally(() => setLoading(false))
+    }
+
+    void loadCheckout()
   }, [])
 
   const handlePlaceOrder = async () => {
@@ -47,7 +61,7 @@ export default function CheckoutPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ addressId: selectedAddressId })
       })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<OrderDetails>
       if (data.success) {
         toast.success("Order placed successfully!")
         router.push(`/orders/${data.data.id}`)
@@ -72,7 +86,7 @@ export default function CheckoutPage() {
     )
   }
 
-  const total = cart.items.reduce((acc: number, item: any) => acc + item.quantity * Number(item.product.price), 0)
+  const total = cart.items.reduce((acc, item) => acc + item.quantity * Number(item.product.price), 0)
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -89,7 +103,7 @@ export default function CheckoutPage() {
                 </div>
              ) : (
                 <div className="space-y-4">
-                  {addresses.map(addr => (
+                  {addresses.map((addr) => (
                     <div 
                       key={addr.id} 
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${selectedAddressId === addr.id ? 'border-primary ring-1 ring-primary bg-primary/5' : 'hover:bg-accent'}`}
@@ -108,7 +122,7 @@ export default function CheckoutPage() {
           <div className="rounded-xl border bg-card p-6 shadow-sm sticky top-24">
             <h2 className="text-xl font-semibold mb-4 border-b pb-4">Order Summary</h2>
             <div className="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2">
-               {cart.items.map((item: any) => (
+               {cart.items.map((item) => (
                  <div key={item.id} className="flex justify-between text-sm">
                    <span className="text-muted-foreground line-clamp-1 flex-1 pr-4">{item.quantity}x {item.product.name}</span>
                    <span className="font-medium flex-shrink-0">${(item.quantity * Number(item.product.price)).toFixed(2)}</span>

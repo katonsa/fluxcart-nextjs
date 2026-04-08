@@ -9,15 +9,16 @@ import {
 } from "@hugeicons/core-free-icons"
 import Link from "next/link"
 import { OrderStatusBadge } from "@/components/order-status-badge"
+import type { AdminStatsView, ApiResponse } from "@/lib/types/api"
 
 export default function AdminDashboardPage() {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<AdminStatsView | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch("/api/admin/stats")
-      .then(res => res.json())
-      .then(res => {
+      .then((res) => res.json() as Promise<ApiResponse<AdminStatsView>>)
+      .then((res) => {
         if (res.success) setData(res.data)
       })
       .finally(() => setLoading(false))
@@ -39,7 +40,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
-        <p className="text-muted-foreground mt-2">Welcome to your store's control panel.</p>
+        <p className="text-muted-foreground mt-2">Welcome to your store&apos;s control panel.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -75,7 +76,7 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y">
-               {recentOrders.map((order: any) => (
+               {recentOrders.map((order) => (
                  <tr key={order.id} className="hover:bg-muted/50 transition-colors">
                    <td className="px-6 py-4 font-medium">#{order.id.slice(-8).toUpperCase()}</td>
                    <td className="px-6 py-4">{order.user.name || order.user.email}</td>

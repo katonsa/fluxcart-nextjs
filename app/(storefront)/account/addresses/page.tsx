@@ -2,38 +2,40 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PlusSignIcon, Delete02Icon, StarIcon } from "@hugeicons/core-free-icons"
+import type { AddressView, ApiResponse } from "@/lib/types/api"
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<any[]>([])
+  const [addresses, setAddresses] = useState<AddressView[]>([])
   const [loading, setLoading] = useState(true)
 
-  const fetchAddresses = () => {
+  const fetchAddresses = async () => {
     setLoading(true)
-    fetch("/api/users/me/addresses")
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) setAddresses(res.data)
-      })
-      .finally(() => setLoading(false))
+    try {
+      const res = await fetch("/api/users/me/addresses")
+      const data = (await res.json()) as ApiResponse<AddressView[]>
+      if (data.success) {
+        setAddresses(data.data)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    fetchAddresses()
+    void fetchAddresses()
   }, [])
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this address?")) return
     try {
       const res = await fetch(`/api/users/me/addresses/${id}`, { method: "DELETE" })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<{ success: true }>
       if (data.success) {
         toast.success("Address deleted")
-        fetchAddresses()
+        void fetchAddresses()
       } else {
         toast.error(data.message || "Failed to delete")
       }
@@ -45,10 +47,10 @@ export default function AddressesPage() {
   const handleMakeDefault = async (id: string) => {
     try {
       const res = await fetch(`/api/users/me/addresses/${id}/default`, { method: "PATCH" })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<{ success: true }>
       if (data.success) {
         toast.success("Default address updated")
-        fetchAddresses()
+        void fetchAddresses()
       } else {
         toast.error(data.message || "Failed to update")
       }

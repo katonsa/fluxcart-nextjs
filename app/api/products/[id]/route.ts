@@ -7,6 +7,12 @@ import { UpdateProductSchema } from "@/lib/modules/products/product.schema"
 
 type Params = Promise<{ id: string }>
 
+export const GET = withErrorHandler(async (req: NextRequest, { params }: { params: Params }) => {
+  const { id: slug } = await params
+  const product = await productService.getBySlug(slug)
+  return ok(product)
+})
+
 export const PATCH = withErrorHandler(
   requirePermission("product", ["update"])(async (ctx, req: NextRequest, { params }: { params: Params }) => {
     const { id } = await params

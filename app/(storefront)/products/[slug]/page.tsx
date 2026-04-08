@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import { productService } from "@/lib/modules/products/product.service"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Image01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -15,7 +14,7 @@ export default async function ProductPage({ params }: { params: Params }) {
 
   try {
     product = await productService.getBySlug(slug)
-  } catch (e) {
+  } catch {
     notFound()
   }
 

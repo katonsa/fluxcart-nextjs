@@ -2,6 +2,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { categoryService } from "@/lib/modules/categories/category.service"
 import { CategoryCard } from "@/components/category-card"
+import type { CategorySummary } from "@/lib/types/api"
 
 export default async function HomePage() {
   const categories = await categoryService.list()
@@ -56,7 +57,7 @@ export default async function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {categories.slice(0, 4).map((category: any) => (
+          {categories.slice(0, 4).map((category: CategorySummary) => (
             <CategoryCard key={category.id} category={category} />
           ))}
           {categories.length === 0 && (

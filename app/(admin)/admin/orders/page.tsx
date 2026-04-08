@@ -2,15 +2,16 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { OrderStatusBadge } from "@/components/order-status-badge"
+import type { AdminOrderSummary, ApiResponse } from "@/lib/types/api"
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<AdminOrderSummary[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch("/api/admin/orders")
-      .then(res => res.json())
-      .then(res => {
+      .then((res) => res.json() as Promise<ApiResponse<AdminOrderSummary[]>>)
+      .then((res) => {
         if (res.success) setOrders(res.data)
       })
       .finally(() => setLoading(false))
@@ -40,7 +41,7 @@ export default function AdminOrdersPage() {
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">Loading orders...</td>
                 </tr>
-              ) : orders.map((order: any) => (
+              ) : orders.map((order) => (
                 <tr key={order.id} className="hover:bg-muted/50 transition-colors">
                   <td className="px-6 py-4 font-medium">#{order.id.slice(-8).toUpperCase()}</td>
                   <td className="px-6 py-4">

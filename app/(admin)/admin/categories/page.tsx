@@ -6,14 +6,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { PlusSignIcon, Edit02Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { toast } from "sonner"
+import type { ApiResponse, CategorySummary } from "@/lib/types/api"
 
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<any[]>([])
+  const [categories, setCategories] = useState<CategorySummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     fetch("/api/categories")
-      .then((res) => res.json())
+      .then((res) => res.json() as Promise<ApiResponse<CategorySummary[]>>)
       .then((res) => {
         if (res.success) {
           setCategories(res.data)

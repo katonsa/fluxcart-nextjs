@@ -5,15 +5,16 @@ import Link from "next/link"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
+import type { ApiResponse, CartView } from "@/lib/types/api"
 
 export default function CartPage() {
-  const [cart, setCart] = useState<any>(null)
+  const [cart, setCart] = useState<CartView | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchCart = async () => {
     try {
       const res = await fetch("/api/cart")
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<CartView>
       if (data.success) {
         setCart(data.data)
       }
@@ -25,28 +26,28 @@ export default function CartPage() {
   }
 
   useEffect(() => {
-    fetchCart()
+    void fetchCart()
   }, [])
 
-  const updateQuantity = async (itemId: string, newQuantity: number) => {
+  const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return
     try {
-      const res = await fetch(`/api/cart/${itemId}`, {
+      const res = await fetch(`/api/cart/items/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQuantity })
+        body: JSON.stringify({ quantity: newQuantity }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<CartView>
       if (data.success) setCart(data.data)
     } catch {
       toast.error("Error updating cart")
     }
   }
 
-  const removeItem = async (itemId: string) => {
+  const removeItem = async (productId: string) => {
     try {
-      const res = await fetch(`/api/cart/${itemId}`, { method: "DELETE" })
-      const data = await res.json()
+      const res = await fetch(`/api/cart/items/${productId}`, { method: "DELETE" })
+      const data = (await res.json()) as ApiResponse<CartView>
       if (data.success) setCart(data.data)
     } catch {
       toast.error("Error removing item")
@@ -55,18 +56,18 @@ export default function CartPage() {
 
   if (loading) return <div className="p-12 pl-12 text-center text-muted-foreground">Loading your cart...</div>
 
-  const itemsCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0
-  const total = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity * Number(item.product.price), 0) || 0
+  const itemsCount = cart?.items.reduce((acc, item) => acc + item.quantity, 0) || 0
+  const total = cart?.items.reduce((acc, item) => acc + item.quantity * Number(item.product.price), 0) || 0
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold tracking-tight mb-10">Shopping Cart</h1>
 
-      {cart?.items?.length > 0 ? (
+      {(cart?.items.length ?? 0) > 0 ? (
         <div className="grid lg:grid-cols-12 gap-12">
           {/* Cart Items */}
           <div className="lg:col-span-8 space-y-6">
-            {cart.items.map((item: any) => (
+            {cart!.items.map((item) => (
               <div key={item.id} className="flex gap-6 rounded-xl border bg-card p-6 shadow-sm">
                 <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border bg-muted flex items-center justify-center">
                   {item.product.imageUrls?.[0] ? (
@@ -92,12 +93,12 @@ export default function CartPage() {
                   
                   <div className="mt-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.productId, item.quantity - 1)}>-</Button>
                       <span className="w-6 text-center font-medium">{item.quantity}</span>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.productId, item.quantity + 1)}>+</Button>
                     </div>
                     
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeItem(item.id)}>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeItem(item.productId)}>
                       <HugeiconsIcon icon={Delete02Icon} size={20} />
                       <span className="sr-only">Remove</span>
                     </Button>

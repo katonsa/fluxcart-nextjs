@@ -7,14 +7,15 @@ import { Badge } from "@/components/ui/badge"
 import { PlusSignIcon, Edit02Icon, Delete02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { toast } from "sonner"
+import type { ApiResponse, ProductSummary } from "@/lib/types/api"
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<any[]>([])
+  const [products, setProducts] = useState<ProductSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     fetch("/api/products?limit=50")
-      .then((res) => res.json())
+      .then((res) => res.json() as Promise<ApiResponse<ProductSummary[]>>)
       .then((res) => {
         if (res.success) {
           setProducts(res.data)

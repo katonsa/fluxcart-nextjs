@@ -7,17 +7,18 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
+import type { ApiResponse, CartView } from "@/lib/types/api"
 
 export function CartSheet() {
   const [open, setOpen] = useState(false)
-  const [cart, setCart] = useState<any>(null)
+  const [cart, setCart] = useState<CartView | null>(null)
   const [loading, setLoading] = useState(false)
 
   const fetchCart = async () => {
     setLoading(true)
     try {
       const res = await fetch("/api/cart")
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<CartView>
       if (data.success) {
         setCart(data.data)
       }
@@ -30,19 +31,19 @@ export function CartSheet() {
 
   useEffect(() => {
     if (open) {
-      fetchCart()
+      void fetchCart()
     }
   }, [open])
 
-  const updateQuantity = async (itemId: string, newQuantity: number) => {
+  const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return
     try {
-      const res = await fetch(`/api/cart/${itemId}`, {
+      const res = await fetch(`/api/cart/items/${productId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQuantity })
+        body: JSON.stringify({ quantity: newQuantity }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<CartView>
       if (data.success) setCart(data.data)
       else toast.error(data.message || "Failed to update quantity")
     } catch {
@@ -50,18 +51,18 @@ export function CartSheet() {
     }
   }
 
-  const removeItem = async (itemId: string) => {
+  const removeItem = async (productId: string) => {
     try {
-      const res = await fetch(`/api/cart/${itemId}`, { method: "DELETE" })
-      const data = await res.json()
+      const res = await fetch(`/api/cart/items/${productId}`, { method: "DELETE" })
+      const data = (await res.json()) as ApiResponse<CartView>
       if (data.success) setCart(data.data)
     } catch {
       toast.error("Error removing item")
     }
   }
 
-  const itemsCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0
-  const total = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity * Number(item.product.price), 0) || 0
+  const itemsCount = cart?.items.reduce((acc, item) => acc + item.quantity, 0) || 0
+  const total = cart?.items.reduce((acc, item) => acc + item.quantity * Number(item.product.price), 0) || 0
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -84,9 +85,9 @@ export function CartSheet() {
         <div className="flex-1 overflow-y-auto py-6">
           {loading && !cart ? (
             <div className="flex h-full items-center justify-center">Loading...</div>
-          ) : cart?.items?.length > 0 ? (
+          ) : (cart?.items.length ?? 0) > 0 ? (
             <div className="space-y-6">
-              {cart.items.map((item: any) => (
+              {cart!.items.map((item) => (
                 <div key={item.id} className="flex gap-4 border-b pb-4 last:border-0 last:pb-0">
                   <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border bg-muted flex items-center justify-center">
                     {item.product.imageUrls?.[0] ? (
@@ -105,12 +106,12 @@ export function CartSheet() {
                     
                     <div className="mt-auto flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
-                        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
+                        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.productId, item.quantity - 1)}>-</Button>
                         <span className="w-4 text-center">{item.quantity}</span>
-                        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
+                        <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => updateQuantity(item.productId, item.quantity + 1)}>+</Button>
                       </div>
                       
-                      <button type="button" onClick={() => removeItem(item.id)} className="font-medium text-destructive hover:underline text-xs">
+                      <button type="button" onClick={() => removeItem(item.productId)} className="font-medium text-destructive hover:underline text-xs">
                         Remove
                       </button>
                     </div>
@@ -130,7 +131,7 @@ export function CartSheet() {
           )}
         </div>
 
-        {cart?.items?.length > 0 && (
+        {(cart?.items.length ?? 0) > 0 && (
           <div className="border-t pt-6 bg-background">
             <div className="flex justify-between text-base font-medium mb-1.5">
               <p>Subtotal</p>

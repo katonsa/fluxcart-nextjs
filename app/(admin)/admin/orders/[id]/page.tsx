@@ -1,43 +1,55 @@
 "use client"
-import { useEffect, useState, use } from "react"
+import { useEffect, useEffectEvent, useState, use } from "react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import type { AdminOrderDetails, ApiResponse } from "@/lib/types/api"
+import type { OrderStatus } from "@/lib/generated/prisma/client"
 
-const AVAILABLE_STATUSES = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"]
+const AVAILABLE_STATUSES: OrderStatus[] = [
+  "PENDING",
+  "CONFIRMED",
+  "PROCESSING",
+  "SHIPPED",
+  "DELIVERED",
+  "CANCELLED",
+  "REFUNDED",
+]
 
 export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const [order, setOrder] = useState<any>(null)
+  const [order, setOrder] = useState<AdminOrderDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
 
-  const fetchOrder = () => {
+  const fetchOrder = useEffectEvent(async () => {
     setLoading(true)
-    fetch(`/api/admin/orders/${id}`)
-      .then(res => res.json())
-      .then(res => {
-        if (res.success) setOrder(res.data)
-      })
-      .finally(() => setLoading(false))
-  }
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`)
+      const data = (await res.json()) as ApiResponse<AdminOrderDetails>
+      if (data.success) {
+        setOrder(data.data)
+      }
+    } finally {
+      setLoading(false)
+    }
+  })
 
   useEffect(() => {
-    fetchOrder()
+    void fetchOrder()
   }, [id])
 
-  const updateStatus = async (status: string) => {
+  const updateStatus = async (status: OrderStatus) => {
     setUpdating(true)
     try {
       const res = await fetch(`/api/admin/orders/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status }),
       })
-      const data = await res.json()
+      const data = (await res.json()) as ApiResponse<AdminOrderDetails>
       if (data.success) {
+        setOrder(data.data)
         toast.success("Order status updated")
-        fetchOrder()
       } else {
         toast.error(data.message || "Failed to update status")
       }
@@ -66,7 +78,7 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
              className="bg-background border rounded-md px-3 py-1.5 text-sm outline-none font-medium"
              value={order.status}
              disabled={updating}
-             onChange={(e) => updateStatus(e.target.value)}
+             onChange={(e) => updateStatus(e.target.value as OrderStatus)}
            >
              {AVAILABLE_STATUSES.map(s => (
                <option key={s} value={s}>{s}</option>
@@ -80,7 +92,7 @@ export default function AdminOrderDetailsPage({ params }: { params: Promise<{ id
            <div className="rounded-xl border bg-card p-6 shadow-sm">
              <h2 className="text-lg font-semibold border-b pb-4 mb-4">Items</h2>
              <div className="divide-y space-y-4">
-                {order.items.map((item: any, i: number) => (
+                {order.items.map((item, i) => (
                   <div key={item.id} className={`flex gap-4 ${i > 0 && 'pt-4'}`}>
                     <div className="h-16 w-16 bg-muted rounded border overflow-hidden">
                        {item.productImage && (

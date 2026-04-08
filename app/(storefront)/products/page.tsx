@@ -3,6 +3,7 @@ import { categoryService } from "@/lib/modules/categories/category.service"
 import { ProductCard } from "@/components/product-card"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import type { CategorySummary, ProductSummary } from "@/lib/types/api"
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>
 
@@ -34,7 +35,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                 >
                   All Products
                 </Link>
-                {categories.map((cat: any) => (
+                {categories.map((cat: CategorySummary) => (
                   <Link 
                     key={cat.id} 
                     href={`/products?category=${cat.slug}`} 
@@ -51,7 +52,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         <div className="flex-1">
            <div className="mb-6 flex items-center justify-between">
               <h1 className="text-2xl font-bold tracking-tight">
-                {categoryStr ? categories.find((c: any) => c.slug === categoryStr)?.name || "Products" : "All Products"}
+                {categoryStr ? categories.find((c: CategorySummary) => c.slug === categoryStr)?.name || "Products" : "All Products"}
               </h1>
               <span className="text-sm text-muted-foreground">{meta!.total} products</span>
            </div>
@@ -59,8 +60,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
            {products.length > 0 ? (
              <>
                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                 {products.map((product: any) => (
-                   <ProductCard key={product.id} product={product as any} />
+                 {products.map((product: ProductSummary) => (
+                   <ProductCard key={product.id} product={product} />
                  ))}
                </div>
                
