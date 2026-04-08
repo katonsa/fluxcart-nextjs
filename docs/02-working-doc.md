@@ -31,6 +31,7 @@ This document records:
 - Storefront/admin pages updated to the corrected route contract
 - `/account/addresses` now supports creating addresses from the customer UI via the existing `POST /api/users/me/addresses` route
 - `/admin/categories` now supports category creation, editing, and deletion from the admin UI via the existing category API routes
+- `/admin/products` now supports product creation, editing, and soft deletion from the admin UI via the existing product API routes
 - Global toast notifications are now mounted in the root layout, so async failures such as offline address submission are visible to the user
 - `npm run typecheck` passes
 - `npm run lint` passes
@@ -110,6 +111,7 @@ Implementation note:
 - Storefront/admin pages were typed against shared API view models in [`lib/types/api.ts`](../lib/types/api.ts)
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
+- Product management UI in [`app/(admin)/admin/products/page.tsx`](../app/(admin)/admin/products/page.tsx) now includes create and edit dialog flows, category selection, image URL parsing, and row-level soft delete handling against `/api/products` and `/api/products/:id`
 - Global toast rendering is mounted in [`app/layout.tsx`](../app/layout.tsx) through [`components/ui/sonner.tsx`](../components/ui/sonner.tsx)
 
 ---
