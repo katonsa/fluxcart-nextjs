@@ -139,7 +139,7 @@ export function CartSheet() {
             </div>
             <p className="text-xs text-muted-foreground mb-6">Shipping and taxes calculated at checkout.</p>
             <Button className="w-full" size="lg" asChild onClick={() => setOpen(false)}>
-              <Link href="/cart">Go to Checkout</Link>
+              <Link href="/checkout">Go to Checkout</Link>
             </Button>
           </div>
         )}

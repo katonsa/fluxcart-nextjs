@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { redis, RedisKeys } from "@/lib/redis"
 import { ApiError } from "@/lib/api/errors"
 import { Prisma } from "@/lib/generated/prisma/client"
 import {
@@ -14,7 +15,7 @@ export class OrderService {
     })
     if (!address) throw ApiError.notFound("Address not found or unauthorized")
 
-    const order = await db.$transaction(async (tx) => {
+    const { order, affectedSlugs } = await db.$transaction(async (tx) => {
       const cart = await tx.cart.findUnique({
         where: { userId },
         include: { items: { include: { product: true } } },
@@ -86,9 +87,13 @@ export class OrderService {
         where: { cartId: cart.id },
       })
 
-      return newOrder
+      return {
+        order: newOrder,
+        affectedSlugs: cart.items.map((item) => item.product.slug),
+      }
     })
 
+    await this.invalidateProductCaches(affectedSlugs)
     return order
   }
 
@@ -110,7 +115,7 @@ export class OrderService {
   }
 
   async cancel(userId: string, orderId: string) {
-    return db.$transaction(async (tx) => {
+    const { order, affectedSlugs } = await db.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id: orderId, userId },
         include: { items: true }
@@ -129,11 +134,24 @@ export class OrderService {
         })
       }
 
-      return tx.order.update({
+      const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: { status: "CANCELLED" },
       })
+
+      const affectedProducts = await tx.product.findMany({
+        where: { id: { in: order.items.map((item) => item.productId) } },
+        select: { slug: true },
+      })
+
+      return {
+        order: updatedOrder,
+        affectedSlugs: affectedProducts.map((product) => product.slug),
+      }
     })
+
+    await this.invalidateProductCaches(affectedSlugs)
+    return order
   }
 
   async adminList(query: AdminOrderListQuery) {
@@ -159,6 +177,22 @@ export class OrderService {
       where: { id: orderId },
       data: { status: data.status },
     })
+  }
+
+  private async invalidateProductCaches(slugs: string[]) {
+    const uniqueSlugs = [...new Set(slugs)]
+
+    await Promise.all([
+      this.invalidateProductListCaches(),
+      ...(uniqueSlugs.length > 0 ? [redis.del(...uniqueSlugs.map((slug) => RedisKeys.product(slug)))] : []),
+    ])
+  }
+
+  private async invalidateProductListCaches() {
+    const keys = await redis.keys("fluxcart:products:list:*")
+    if (keys.length > 0) {
+      await redis.del(...keys)
+    }
   }
 }
 

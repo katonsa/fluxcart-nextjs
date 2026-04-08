@@ -33,6 +33,8 @@ This document records:
 - `/admin/categories` now supports category creation, editing, and deletion from the admin UI via the existing category API routes
 - `/admin/products` now supports product creation, editing, and soft deletion from the admin UI via the existing product API routes
 - Global toast notifications are now mounted in the root layout, so async failures such as offline address submission are visible to the user
+- `/cart` and the cart sheet checkout CTAs now route directly to `/checkout`
+- Product stock now refreshes correctly after checkout and order cancellation because order-side product caches are invalidated after stock changes
 - `npm run typecheck` passes
 - `npm run lint` passes
 
@@ -103,11 +105,13 @@ Implementation note:
 - Checkout uses `db.$transaction(...)`
 - Product rows are locked using `FOR UPDATE` before final validation and decrement
 - `totalAmount` is built with `Prisma.Decimal`
+- Successful checkout and customer cancellation now invalidate affected Redis product detail/list caches after stock changes
 - Customer cancellation is limited to `PENDING`
 - Admin order status input is schema-validated in [`lib/modules/orders/order.schema.ts`](../lib/modules/orders/order.schema.ts)
 
 ### Frontend
 - Storefront cart UI now calls `/api/cart/items/:productId`
+- Storefront checkout CTAs now consistently target `/checkout`
 - Storefront/admin pages were typed against shared API view models in [`lib/types/api.ts`](../lib/types/api.ts)
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
