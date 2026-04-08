@@ -32,6 +32,7 @@ This document records:
 - `/account/addresses` now supports creating addresses from the customer UI via the existing `POST /api/users/me/addresses` route
 - `/admin/categories` now supports category creation, editing, and deletion from the admin UI via the existing category API routes
 - `/admin/products` now supports product creation, editing, and soft deletion from the admin UI via the existing product API routes
+- `/admin/orders/[id]` now uses the shared admin card/select primitives with a clearer detail layout for fulfillment, items, customer, shipping, and financial sections
 - Global toast notifications are now mounted in the root layout, so async failures such as offline address submission are visible to the user
 - `/cart` and the cart sheet checkout CTAs now route directly to `/checkout`
 - Product stock now refreshes correctly after checkout and order cancellation because order-side product caches are invalidated after stock changes
@@ -120,6 +121,7 @@ Implementation note:
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
 - Product management UI in [`app/(admin)/admin/products/page.tsx`](../app/(admin)/admin/products/page.tsx) now includes create and edit dialog flows, category selection, image URL parsing, and row-level soft delete handling against `/api/products` and `/api/products/:id`
+- Admin order detail UI in [`app/(admin)/admin/orders/[id]/page.tsx`](../app/(admin)/admin/orders/[id]/page.tsx) now uses shared card/select primitives and a structured detail layout instead of ad-hoc blocks and a native select
 - Global toast rendering is mounted in [`app/layout.tsx`](../app/layout.tsx) through [`components/ui/sonner.tsx`](../components/ui/sonner.tsx)
 
 ---
