@@ -29,11 +29,13 @@ This document records:
   - totals use `Prisma.Decimal`
 - Customer cancel flow restricted back to `PENDING` orders only
 - Storefront/admin pages updated to the corrected route contract
+- `/account/addresses` now supports creating addresses from the customer UI via the existing `POST /api/users/me/addresses` route
+- Global toast notifications are now mounted in the root layout, so async failures such as offline address submission are visible to the user
 - `npm run typecheck` passes
 - `npm run lint` passes
 
 ### Last Fix Commit
-- `a770a17` — `Align API contract and cart/order behavior with handoff doc`
+- `e6f9e21` — `Fix address creation flow and toast errors`
 
 ---
 
@@ -105,6 +107,8 @@ Implementation note:
 ### Frontend
 - Storefront cart UI now calls `/api/cart/items/:productId`
 - Storefront/admin pages were typed against shared API view models in [`lib/types/api.ts`](../lib/types/api.ts)
+- Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
+- Global toast rendering is mounted in [`app/layout.tsx`](../app/layout.tsx) through [`components/ui/sonner.tsx`](../components/ui/sonner.tsx)
 
 ---
 
@@ -135,6 +139,13 @@ Recommended follow-up:
 Recommended next step:
 - add Vitest for service-level tests
 - add API route integration tests for checkout, cart merge, admin status update, and address flows
+
+### UI Polish
+- The toaster is now functional, but its presentation is still close to Sonner defaults because there are no repo-level styles for the `cn-toast`/`toaster` class hooks yet
+
+Recommended next step:
+- decide whether to keep the stock Sonner appearance
+- or add project-specific toast styling in [`app/globals.css`](../app/globals.css)
 
 ---
 
