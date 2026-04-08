@@ -56,6 +56,9 @@ Current caveat:
 - [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) supports:
   - server-rendered product listing
   - category filtering from `searchParams`
+  - product search via `searchParams.search`
+  - search form submission from the products page
+  - search result count and search-state messaging
   - pagination
   - product count display
   - empty state when no products match
@@ -134,15 +137,15 @@ Current caveat:
   - [`lib/modules/products/product.schema.ts`](../lib/modules/products/product.schema.ts) defines `search`
   - [`lib/modules/products/product.service.ts`](../lib/modules/products/product.service.ts) filters by product name using case-insensitive `contains`
   - [`app/api/products/route.ts`](../app/api/products/route.ts) passes query params through to the product service
-- Storefront UI exposure does not exist yet:
+- Storefront UI exposure now exists:
   - [`components/navbar.tsx`](../components/navbar.tsx) links to `/products?focus=search`
-  - [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) ignores `focus`
-  - [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) does not read `search`
-  - there is no search input field, search form, or search results messaging in the product listing UI
+  - [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) reads both `focus` and `search`
+  - the products page renders a search input, GET form, and search-aware empty/result messaging
+  - category links and pagination preserve the active search query
 
 Conclusion:
 - product search is implemented at the API level
-- product search is not currently implemented in the storefront UI
+- product search is now implemented in the storefront UI
 
 ### Product Filters
 - Current storefront product filtering only exposes category filtering
@@ -178,11 +181,6 @@ This means several missing storefront interactions can likely be built without i
 
 These should be treated as planned follow-up, not as hidden regressions.
 
-### Missing Search UI
-- API supports product search
-- navbar visually implies search exists
-- storefront listing page does not render a search field or bind a `search` query param
-
 ### Missing Filter/Sort Controls
 - products page only exposes category filtering
 - there is no UI for price range, stock filtering, or sort selection
@@ -195,22 +193,20 @@ These should be treated as planned follow-up, not as hidden regressions.
 - storefront does not yet provide a consistent customer-auth gate or dedicated unauthenticated empty state for protected pages
 
 ### Product Listing Query-State Support Is Partial
-- `/products` preserves `category` during pagination
-- it does not preserve future search/filter params because they are not yet part of the page state model
+- `/products` preserves `category` and `search` during pagination and category changes
+- it still does not preserve future filter params because they are not yet part of the page state model
 
 ### Copy / Documentation Drift
 - home page still contains a stale “placeholder until categories API is wired” comment
-- navbar search link currently over-promises behavior by pointing to `?focus=search` with no matching page implementation
 
 ---
 
 ## Recommended Next Tasks
 
-1. Implement storefront product search on [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) using the existing `search` API parameter.
-2. Replace native address deletion confirm with [`components/ui/alert-dialog.tsx`](../components/ui/alert-dialog.tsx).
-3. Add explicit sort and filter controls to the products page and keep query params stable through pagination.
-4. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
-5. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
+1. Replace native address deletion confirm with [`components/ui/alert-dialog.tsx`](../components/ui/alert-dialog.tsx).
+2. Add explicit sort and filter controls to the products page and keep query params stable through pagination.
+3. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
+4. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
 
 ---
 
