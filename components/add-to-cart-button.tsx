@@ -3,8 +3,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { emitCartUpdated } from "@/lib/cart-events"
-import type { ApiResponse, CartView } from "@/lib/types/api"
+import { useCart } from "@/lib/hooks/use-cart"
 
 interface AddToCartButtonProps {
   productId: string
@@ -15,24 +14,14 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ productId, disabled, stock }: AddToCartButtonProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const { addItem } = useCart()
 
   const handleAddToCart = async () => {
     setLoading(true)
     try {
-      const res = await fetch("/api/cart/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, quantity: 1 }),
-      })
-      const data = (await res.json()) as ApiResponse<CartView>
-      
-      if (data.success) {
-        toast.success("Added to cart")
-        emitCartUpdated()
-        router.refresh() // Refreshes server components to show latest cart state if exposed
-      } else {
-        toast.error(data.message || "Failed to add to cart")
-      }
+      await addItem(productId, 1)
+      toast.success("Added to cart")
+      router.refresh() // Refreshes server components to show latest cart state if exposed
     } catch {
       toast.error("An error occurred")
     } finally {

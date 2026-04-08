@@ -7,75 +7,32 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import type { ApiResponse, CartView } from "@/lib/types/api"
-import { CART_UPDATED_EVENT, emitCartUpdated } from "@/lib/cart-events"
+import { useCart } from "@/lib/hooks/use-cart"
 
 export function CartSheet() {
   const [open, setOpen] = useState(false)
-  const [cart, setCart] = useState<CartView | null>(null)
-  const [loading, setLoading] = useState(false)
-
-  const fetchCart = async () => {
-    setLoading(true)
-    try {
-      const res = await fetch("/api/cart")
-      const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) {
-        setCart(data.data)
-      }
-    } catch {
-       // Silent error for cart auto-fetch
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { cart, isLoading, refreshCart, updateItem, removeItem: deleteItem } = useCart()
 
   useEffect(() => {
     if (open) {
-      void fetchCart()
+      void refreshCart()
     }
-  }, [open])
-
-  useEffect(() => {
-    const handleCartUpdated = () => {
-      void fetchCart()
-    }
-
-    window.addEventListener(CART_UPDATED_EVENT, handleCartUpdated)
-    return () => {
-      window.removeEventListener(CART_UPDATED_EVENT, handleCartUpdated)
-    }
-  }, [])
+  }, [open, refreshCart])
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return
     try {
-      const res = await fetch(`/api/cart/items/${productId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQuantity }),
-      })
-      const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) {
-        setCart(data.data)
-        emitCartUpdated()
-      }
-      else toast.error(data.message || "Failed to update quantity")
+      await updateItem(productId, newQuantity)
     } catch {
-      toast.error("Error updating cart")
+      toast.error("Failed to update quantity")
     }
   }
 
   const removeItem = async (productId: string) => {
     try {
-      const res = await fetch(`/api/cart/items/${productId}`, { method: "DELETE" })
-      const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) {
-        setCart(data.data)
-        emitCartUpdated()
-      }
+      await deleteItem(productId)
     } catch {
-      toast.error("Error removing item")
+      toast.error("Failed to remove item")
     }
   }
 
@@ -101,7 +58,7 @@ export function CartSheet() {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-6">
-          {loading && !cart ? (
+          {isLoading && !cart ? (
             <div className="flex h-full items-center justify-center">Loading...</div>
           ) : (cart?.items.length ?? 0) > 0 ? (
             <div className="space-y-6">

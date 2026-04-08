@@ -3,28 +3,23 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import type { AddressView, ApiResponse, CartView, OrderDetails } from "@/lib/types/api"
-import { emitCartUpdated } from "@/lib/cart-events"
+import type { AddressView, ApiResponse, OrderDetails } from "@/lib/types/api"
+import { useCart } from "@/lib/hooks/use-cart"
 
 export default function CheckoutPage() {
-  const [cart, setCart] = useState<CartView | null>(null)
   const [addresses, setAddresses] = useState<AddressView[]>([])
   const [selectedAddressId, setSelectedAddressId] = useState("")
-  const [loading, setLoading] = useState(true)
+  const [loadingAddresses, setLoadingAddresses] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const router = useRouter()
+  const { cart, isLoading: loadingCart, refreshCart } = useCart({ eager: true })
 
   useEffect(() => {
     const loadCheckout = async () => {
       try {
-        const [cartRes, addressesRes] = await Promise.all([
-          fetch("/api/cart").then((res) => res.json() as Promise<ApiResponse<CartView>>),
-          fetch("/api/users/me/addresses").then((res) => res.json() as Promise<ApiResponse<AddressView[]>>),
-        ])
-
-        if (cartRes.success) {
-          setCart(cartRes.data)
-        }
+        const addressesRes = await fetch("/api/users/me/addresses").then((res) =>
+          res.json() as Promise<ApiResponse<AddressView[]>>
+        )
 
         if (addressesRes.success) {
           setAddresses(addressesRes.data)
@@ -38,7 +33,7 @@ export default function CheckoutPage() {
       } catch {
         toast.error("Failed to load checkout data")
       } finally {
-        setLoading(false)
+        setLoadingAddresses(false)
       }
     }
 
@@ -64,7 +59,7 @@ export default function CheckoutPage() {
       })
       const data = (await res.json()) as ApiResponse<OrderDetails>
       if (data.success) {
-        emitCartUpdated()
+        await refreshCart()
         toast.success("Order placed successfully!")
         router.push(`/orders/${data.data.id}`)
       } else {
@@ -77,7 +72,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (loading) return <div className="p-12 text-center text-muted-foreground">Loading checkout...</div>
+  if (loadingCart || loadingAddresses) return <div className="p-12 text-center text-muted-foreground">Loading checkout...</div>
 
   if (!cart?.items?.length) {
     return (

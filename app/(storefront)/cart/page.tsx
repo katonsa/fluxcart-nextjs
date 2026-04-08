@@ -1,67 +1,39 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Delete02Icon } from "@hugeicons/core-free-icons"
-import type { ApiResponse, CartView } from "@/lib/types/api"
-import { emitCartUpdated } from "@/lib/cart-events"
+import { useCart } from "@/lib/hooks/use-cart"
 
 export default function CartPage() {
-  const [cart, setCart] = useState<CartView | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchCart = async () => {
-    try {
-      const res = await fetch("/api/cart")
-      const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) {
-        setCart(data.data)
-      }
-    } catch {
-       toast.error("Failed to load cart")
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { cart, error, isLoading, updateItem, removeItem } = useCart({ eager: true })
 
   useEffect(() => {
-    void fetchCart()
-  }, [])
+    if (error) {
+      toast.error(error.message || "Failed to load cart")
+    }
+  }, [error])
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return
     try {
-      const res = await fetch(`/api/cart/items/${productId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQuantity }),
-      })
-      const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) {
-        setCart(data.data)
-        emitCartUpdated()
-      }
+      await updateItem(productId, newQuantity)
     } catch {
-      toast.error("Error updating cart")
+      toast.error("Failed to update cart")
     }
   }
 
-  const removeItem = async (productId: string) => {
+  const removeCartItem = async (productId: string) => {
     try {
-      const res = await fetch(`/api/cart/items/${productId}`, { method: "DELETE" })
-      const data = (await res.json()) as ApiResponse<CartView>
-      if (data.success) {
-        setCart(data.data)
-        emitCartUpdated()
-      }
+      await removeItem(productId)
     } catch {
-      toast.error("Error removing item")
+      toast.error("Failed to remove item")
     }
   }
 
-  if (loading) return <div className="p-12 pl-12 text-center text-muted-foreground">Loading your cart...</div>
+  if (isLoading && !cart) return <div className="p-12 pl-12 text-center text-muted-foreground">Loading your cart...</div>
 
   const itemsCount = cart?.items.reduce((acc, item) => acc + item.quantity, 0) || 0
   const total = cart?.items.reduce((acc, item) => acc + item.quantity * Number(item.product.price), 0) || 0
@@ -105,7 +77,7 @@ export default function CartPage() {
                       <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.productId, item.quantity + 1)}>+</Button>
                     </div>
                     
-                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeItem(item.productId)}>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeCartItem(item.productId)}>
                       <HugeiconsIcon icon={Delete02Icon} size={20} />
                       <span className="sr-only">Remove</span>
                     </Button>

@@ -37,6 +37,7 @@ This document records:
 - `/cart` and the cart sheet checkout CTAs now route directly to `/checkout`
 - Product stock now refreshes correctly after checkout and order cancellation because order-side product caches are invalidated after stock changes
 - Authenticated cart state now clears correctly after checkout because order creation also invalidates the Redis user-cart cache after deleting cart rows
+- Storefront cart state is now shared through SWR instead of a custom browser event helper, and `swr` is installed in the app dependencies
 - Order mutation responses now preserve the same full detail shape as order detail reads, preventing runtime crashes after admin status changes and customer cancellation
 - `npm run typecheck` passes
 - `npm run lint` passes
@@ -119,7 +120,7 @@ Implementation note:
 ### Frontend
 - Storefront cart UI now calls `/api/cart/items/:productId`
 - Storefront checkout CTAs now consistently target `/checkout`
-- Client cart surfaces use a shared browser event in [`lib/cart-events.ts`](../lib/cart-events.ts) so checkout and cart mutations can notify the navbar cart sheet without forcing eager cart fetches on page load
+- Client cart surfaces now share `/api/cart` state through SWR, so cart mutations update the navbar cart sheet and cart page through a single cache instead of browser events
 - Storefront/admin pages were typed against shared API view models in [`lib/types/api.ts`](../lib/types/api.ts)
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
