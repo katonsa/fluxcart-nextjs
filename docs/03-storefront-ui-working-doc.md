@@ -102,6 +102,7 @@ Current note:
   - placing an order through `POST /api/orders`
   - refreshing cart state after successful checkout
   - redirecting to order detail page after success
+  - route-specific unauthenticated explainer state that preserves `redirectTo=/checkout`
 
 Current caveat:
 - checkout still depends on saved addresses existing for a successful order, so the empty state remains the main path to address creation
@@ -127,13 +128,13 @@ Current caveat:
   - list order history
   - show order status badges
   - view details for each order
-  - route-level auth redirect to `/sign-in?redirectTo=/orders`
+  - route-specific unauthenticated explainer state that preserves `redirectTo=/orders`
 - [`app/(storefront)/orders/[id]/page.tsx`](../app/(storefront)/orders/[id]/page.tsx) supports:
   - order detail display
   - item list and shipping address
   - order cancellation for `PENDING` orders
   - shared `AlertDialog` confirmation for cancellation
-  - route-level auth redirect to `/sign-in?redirectTo=/orders/:id`
+  - route-specific unauthenticated explainer state that preserves `redirectTo=/orders/:id`
 
 ---
 
@@ -192,7 +193,7 @@ This means several missing storefront interactions can likely be built without i
 These should be treated as planned follow-up, not as hidden regressions.
 
 ### Protected-Route UX
-- protected storefront routes now redirect at the route boundary, but they still rely on a shared sign-in page rather than route-specific explanatory empty states
+- account and address pages still redirect to shared sign-in, while checkout and orders now use route-specific guest explainers instead of an immediate redirect
 
 ### API Surface
 - the storefront no longer depends on the explicit `by-slug` API routes or the standalone product inventory endpoint
@@ -201,7 +202,7 @@ These should be treated as planned follow-up, not as hidden regressions.
 
 ## Recommended Next Tasks
 
-1. Decide whether protected storefront routes should keep redirecting to shared sign-in, or add route-specific unauthenticated explainer states for checkout and orders.
+1. Decide whether account and address pages should also get route-specific unauthenticated explainer states.
 2. Improve failure-state messaging inside protected pages for non-auth API errors such as suspended accounts or missing order records.
 
 ---
