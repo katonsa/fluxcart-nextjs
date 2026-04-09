@@ -168,7 +168,6 @@ Error         : { success: false, statusCode, message, errors?: [...] }
 | POST | `/api/products` | Admin |
 | PATCH | `/api/products/:id` | Admin |
 | DELETE | `/api/products/:id` | Admin (soft delete) |
-| PATCH | `/api/products/:id/inventory` | Admin |
 
 Query params: `?page, limit, category, minPrice, maxPrice, search, inStock, sortBy, order`
 
@@ -206,15 +205,11 @@ Implementation note:
 - `PATCH /api/admin/orders/:id/status` is expected to return the same nested detail shape as `GET /api/admin/orders/:id`, including `items`, `address`, and `user`.
 
 ### Route Implementation Note
-- The repo currently supports public category/product reads in two ways:
-  - legacy dual-purpose dynamic routes:
-    - `app/api/categories/[id]/route.ts`
-    - `app/api/products/[id]/route.ts`
-  - explicit slug routes:
-    - `app/api/categories/by-slug/[slug]/route.ts`
-    - `app/api/products/by-slug/[slug]/route.ts`
+- The repo currently supports public category/product reads through the legacy dual-purpose dynamic routes:
+  - `app/api/categories/[id]/route.ts`
+  - `app/api/products/[id]/route.ts`
 - In the legacy `[id]` routes, `GET` treats the dynamic segment as a slug, while `PATCH` / `DELETE` treat it as a database id.
-- The explicit `by-slug` routes now coexist with the legacy shorthand, so the route structure is in transition rather than fully standardized.
+- The storefront reads categories and products directly from `categoryService` and `productService` on the server, so it does not depend on separate slug-specific API routes.
 
 ---
 

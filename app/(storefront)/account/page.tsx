@@ -13,6 +13,10 @@ export default function AccountPage() {
   const [profile, setProfile] = useState<ProfileView | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [changingPassword, setChangingPassword] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -33,12 +37,12 @@ export default function AccountPage() {
     e.preventDefault()
     if (!profile) return
     setSaving(true)
-    
+
     try {
       const res = await fetch("/api/users/me", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: profile.name })
+        body: JSON.stringify({ name: profile.name }),
       })
       const data = (await res.json()) as ApiResponse<ProfileView>
       if (data.success) {
@@ -51,6 +55,42 @@ export default function AccountPage() {
       toast.error("An error occurred")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match")
+      return
+    }
+
+    setChangingPassword(true)
+
+    try {
+      const res = await fetch("/api/users/me/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      })
+      const data = (await res.json()) as ApiResponse<{ success: true }>
+
+      if (data.success) {
+        toast.success("Password updated successfully")
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmPassword("")
+      } else {
+        toast.error(data.message || "Failed to update password")
+      }
+    } catch {
+      toast.error("An error occurred while updating your password")
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -72,7 +112,7 @@ export default function AccountPage() {
 
       <div className="rounded-xl border bg-card p-6 shadow-sm">
         <h2 className="mb-6 text-xl font-semibold">Profile Settings</h2>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6 max-w-sm">
           <div className="space-y-2">
             <Label>Email</Label>
@@ -91,6 +131,66 @@ export default function AccountPage() {
 
           <Button type="submit" disabled={saving}>
             {saving ? "Saving..." : "Save Changes"}
+          </Button>
+        </form>
+      </div>
+
+      <div className="mt-8 rounded-xl border bg-card p-6 shadow-sm">
+        <h2 className="mb-6 text-xl font-semibold">Change Password</h2>
+
+        <form onSubmit={handlePasswordChange} className="space-y-6 max-w-sm">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              disabled={changingPassword}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">New Password</Label>
+            <Input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={changingPassword}
+              minLength={8}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={changingPassword}
+              minLength={8}
+              required
+            />
+          </div>
+
+          {confirmPassword.length > 0 && newPassword !== confirmPassword ? (
+            <p className="text-sm text-destructive">New passwords do not match.</p>
+          ) : null}
+
+          <Button
+            type="submit"
+            disabled={
+              changingPassword ||
+              currentPassword.length === 0 ||
+              newPassword.length < 8 ||
+              newPassword !== confirmPassword
+            }
+          >
+            {changingPassword ? "Updating..." : "Update Password"}
           </Button>
         </form>
       </div>

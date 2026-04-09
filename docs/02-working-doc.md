@@ -35,6 +35,8 @@ Related planning docs:
 - Customer cancel flow restricted back to `PENDING` orders only
 - Storefront/admin pages updated to the corrected route contract
 - `/account/addresses` now supports creating addresses from the customer UI via the existing `POST /api/users/me/addresses` route
+- `/account` now supports customer password changes via the existing `PATCH /api/users/me/password` route
+- `/cart` now supports clearing the full cart via the existing `DELETE /api/cart` route
 - `/admin/categories` now supports category creation, editing, and deletion from the admin UI via the existing category API routes
 - `/admin/products` now supports product creation, editing, and soft deletion from the admin UI via the existing product API routes
 - `/admin/orders/[id]` now uses the shared admin card/select primitives with a clearer detail layout for fulfillment, items, customer, shipping, and financial sections
@@ -63,9 +65,9 @@ Related planning docs:
 - `DELETE /api/categories/:id`
 
 Implementation note:
-- Public reads currently work through both:
+- Public reads currently work through the legacy dual-purpose route:
   - [`app/api/categories/[id]/route.ts`](../app/api/categories/[id]/route.ts), where `GET` treats the dynamic segment as a slug and admin mutations treat it as an id
-  - [`app/api/categories/by-slug/[slug]/route.ts`](../app/api/categories/by-slug/[slug]/route.ts), which provides an explicit slug route
+- The explicit `by-slug` category route has been removed because the storefront reads categories directly from `categoryService`
 
 ### Products
 - `GET /api/products`
@@ -73,12 +75,12 @@ Implementation note:
 - `POST /api/products`
 - `PATCH /api/products/:id`
 - `DELETE /api/products/:id`
-- `PATCH /api/products/:id/inventory`
 
 Implementation note:
-- Public reads currently work through both:
+- Public reads currently work through the legacy dual-purpose route:
   - [`app/api/products/[id]/route.ts`](../app/api/products/[id]/route.ts), where `GET` treats the dynamic segment as a slug and admin mutations treat it as an id
-  - [`app/api/products/by-slug/[slug]/route.ts`](../app/api/products/by-slug/[slug]/route.ts), which provides an explicit slug route
+- The explicit `by-slug` product route has been removed because the storefront reads products directly from `productService`
+- Product inventory adjustment now happens through the main product update flow; there is no standalone inventory endpoint
 
 ### Cart
 - `GET /api/cart`
@@ -129,6 +131,7 @@ Implementation note:
 
 ### Frontend
 - Storefront cart UI now calls `/api/cart/items/:productId`
+- Storefront cart UI now also includes a clear-cart action wired to `DELETE /api/cart`
 - Storefront checkout CTAs now consistently target `/checkout`
 - Client cart surfaces now share `/api/cart` state through SWR, so cart mutations update the navbar cart sheet and cart page through a single cache instead of browser events
 - Storefront/admin pages were typed against shared API view models in [`lib/types/api.ts`](../lib/types/api.ts)
@@ -136,6 +139,7 @@ Implementation note:
 - Storefront product discovery now also exposes URL-driven `minPrice`, `maxPrice`, `inStock`, and `sortBy` controls on `/products`, and preserves the full query state through category changes and pagination
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now also uses the shared alert dialog primitive for delete confirmation, with a pending state during destructive requests
+- Account settings UI in [`app/(storefront)/account/page.tsx`](../app/(storefront)/account/page.tsx) now includes a password-change form backed by `PATCH /api/users/me/password`
 - Protected storefront customer routes now enforce auth at the route boundary through App Router layouts, redirecting unauthenticated users to `/sign-in?redirectTo=...` before protected client pages fetch data
 - The sign-in page now honors `redirectTo` and returns the customer to their intended storefront route after successful authentication
 - The sign-in and sign-up pages now both call `POST /api/cart/merge` after successful authentication, preserving guest cart items when a shopper authenticates from checkout or another protected route
@@ -185,9 +189,8 @@ Recommended next step:
 ## Recommended Next Tasks
 
 1. Add Vitest + Supertest and cover cart/order critical paths
-2. Decide whether to keep both the legacy dual-purpose `[id]` routes and the explicit `by-slug` routes, or consolidate on one approach
-3. Keep `docs/01-claude-context.md` aligned as implementation continues
-4. Add Swagger / OpenAPI generation if that remains a portfolio requirement
+2. Keep `docs/01-claude-context.md` aligned as implementation continues
+3. Add Swagger / OpenAPI generation if that remains a portfolio requirement
 
 Product-planning note:
 - the broader product roadmap and delivery backlog for post-MVP work now live in [`docs/04-product-roadmap.md`](./04-product-roadmap.md) and [`docs/05-product-backlog.md`](./05-product-backlog.md)

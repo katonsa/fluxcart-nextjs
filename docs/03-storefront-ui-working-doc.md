@@ -88,6 +88,7 @@ Current note:
   - load current cart
   - increment and decrement quantity
   - remove item
+  - clear the entire cart from the cart page
   - show subtotal
   - route to checkout
   - show empty-state UI
@@ -109,6 +110,7 @@ Current caveat:
 - [`app/(storefront)/account/page.tsx`](../app/(storefront)/account/page.tsx) supports:
   - loading profile from `/api/users/me`
   - updating display name
+  - changing password through `/api/users/me/password`
   - sign out
   - route-level auth redirect to `/sign-in?redirectTo=/account`
 
@@ -138,19 +140,19 @@ Current caveat:
 ## API Capability vs UI Exposure
 
 ### Product Search
-- API support exists:
+- Search support exists in the product query layer:
   - [`lib/modules/products/product.schema.ts`](../lib/modules/products/product.schema.ts) defines `search`
   - [`lib/modules/products/product.service.ts`](../lib/modules/products/product.service.ts) filters by product name using case-insensitive `contains`
-  - [`app/api/products/route.ts`](../app/api/products/route.ts) passes query params through to the product service
 - Storefront UI exposure now exists:
   - [`components/navbar.tsx`](../components/navbar.tsx) links to `/products?focus=search`
   - [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) reads both `focus` and `search`
   - the products page renders a search input, GET form, and search-aware empty/result messaging
   - category links and pagination preserve the active search query
+- Storefront browse and detail pages read services directly on the server rather than calling slug-specific API routes
 
 Conclusion:
-- product search is implemented at the API level
-- product search is now implemented in the storefront UI
+- product search is implemented in the query layer and storefront UI
+- storefront reads are direct-service reads, not API-fetched reads
 
 ### Product Filters
 - Current storefront product filtering only exposes category filtering
@@ -191,6 +193,9 @@ These should be treated as planned follow-up, not as hidden regressions.
 
 ### Protected-Route UX
 - protected storefront routes now redirect at the route boundary, but they still rely on a shared sign-in page rather than route-specific explanatory empty states
+
+### API Surface
+- the storefront no longer depends on the explicit `by-slug` API routes or the standalone product inventory endpoint
 
 ---
 
