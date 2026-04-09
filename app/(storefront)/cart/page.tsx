@@ -1,6 +1,17 @@
 "use client"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import Link from "next/link"
 import { toast } from "sonner"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -8,7 +19,9 @@ import { Delete02Icon } from "@hugeicons/core-free-icons"
 import { useCart } from "@/lib/hooks/use-cart"
 
 export default function CartPage() {
-  const { cart, error, isLoading, updateItem, removeItem } = useCart({ eager: true })
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
+  const { cart, error, isLoading, updateItem, removeItem, clearCart } = useCart({ eager: true })
 
   useEffect(() => {
     if (error) {
@@ -30,6 +43,20 @@ export default function CartPage() {
       await removeItem(productId)
     } catch {
       toast.error("Failed to remove item")
+    }
+  }
+
+  const handleClearCart = async () => {
+    setIsClearing(true)
+
+    try {
+      await clearCart()
+      setIsClearDialogOpen(false)
+      toast.success("Cart cleared")
+    } catch {
+      toast.error("Failed to clear cart")
+    } finally {
+      setIsClearing(false)
     }
   }
 
@@ -90,7 +117,34 @@ export default function CartPage() {
           {/* Order Summary */}
           <div className="lg:col-span-4">
             <div className="rounded-xl border bg-card p-6 shadow-sm">
-              <h2 className="text-lg font-semibold border-b pb-4 mb-4 text-foreground/90">Order Summary</h2>
+              <div className="mb-4 flex items-center justify-between border-b pb-4">
+                <h2 className="text-lg font-semibold text-foreground/90">Order Summary</h2>
+                <AlertDialog open={isClearDialogOpen} onOpenChange={setIsClearDialogOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                      Clear cart
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Clear your cart?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove every item from your cart. You can add them back later if needed.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isClearing}>Keep cart</AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        disabled={isClearing}
+                        onClick={handleClearCart}
+                      >
+                        {isClearing ? "Clearing..." : "Clear cart"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
               
               <div className="flex justify-between text-sm mb-4">
                 <span className="text-muted-foreground">Subtotal ({itemsCount} items)</span>

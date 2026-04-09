@@ -82,6 +82,14 @@ export function useCart(options: UseCartOptions = {}) {
     return setCart(await readCartResponse(res))
   }, [setCart])
 
+  const clearCart = useCallback(async () => {
+    const res = await fetch("/api/cart", {
+      method: "DELETE",
+    })
+
+    return setCart(await readCartResponse(res))
+  }, [setCart])
+
   return {
     cart: cartState.data ?? null,
     error: cartState.error,
@@ -90,5 +98,6 @@ export function useCart(options: UseCartOptions = {}) {
     addItem,
     updateItem,
     removeItem,
+    clearCart,
   }
 }
