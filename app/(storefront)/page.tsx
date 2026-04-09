@@ -40,7 +40,7 @@ export default async function HomePage() {
         <div className="absolute -bottom-24 right-1/3 -z-10 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
       </section>
 
-      {/* Categories Section — placeholder until categories API is wired */}
+      {/* Categories Section */}
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-10 flex items-center justify-between">
           <div>

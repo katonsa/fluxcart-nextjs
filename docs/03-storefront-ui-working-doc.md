@@ -49,8 +49,8 @@ This document records:
   - Admin Panel
   - View all categories via `/products`
 
-Current caveat:
-- [`app/(storefront)/page.tsx`](../app/(storefront)/page.tsx) still contains a comment that categories are a placeholder, but categories are already wired and rendered
+Current note:
+- protected storefront routes now redirect unauthenticated users to `/sign-in?redirectTo=...` before protected client-side fetches run
 
 ### Product Browsing
 - [`app/(storefront)/products/page.tsx`](../app/(storefront)/products/page.tsx) supports:
@@ -102,14 +102,14 @@ Current caveat:
   - redirecting to order detail page after success
 
 Current caveat:
-- checkout assumes signed-in access for address loading and order placement, but the page currently enforces this through runtime fetch behavior rather than a clearer route-level guard/UI state
+- checkout still depends on saved addresses existing for a successful order, so the empty state remains the main path to address creation
 
 ### Account
 - [`app/(storefront)/account/page.tsx`](../app/(storefront)/account/page.tsx) supports:
   - loading profile from `/api/users/me`
   - updating display name
   - sign out
-  - redirect to `/sign-in` if session lookup fails
+  - route-level auth redirect to `/sign-in?redirectTo=/account`
 
 ### Address Book
 - [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) supports:
@@ -117,17 +117,20 @@ Current caveat:
   - create address in dialog
   - delete address
   - mark address as default
+  - route-level auth redirect to `/sign-in?redirectTo=/account/addresses`
 
 ### Orders
 - [`app/(storefront)/orders/page.tsx`](../app/(storefront)/orders/page.tsx) supports:
   - list order history
   - show order status badges
   - view details for each order
+  - route-level auth redirect to `/sign-in?redirectTo=/orders`
 - [`app/(storefront)/orders/[id]/page.tsx`](../app/(storefront)/orders/[id]/page.tsx) supports:
   - order detail display
   - item list and shipping address
   - order cancellation for `PENDING` orders
   - shared `AlertDialog` confirmation for cancellation
+  - route-level auth redirect to `/sign-in?redirectTo=/orders/:id`
 
 ---
 
@@ -185,19 +188,15 @@ This means several missing storefront interactions can likely be built without i
 
 These should be treated as planned follow-up, not as hidden regressions.
 
-### Auth UX Could Be Clearer
-- account and checkout flows depend on runtime redirects or failed fetches
-- storefront does not yet provide a consistent customer-auth gate or dedicated unauthenticated empty state for protected pages
-
-### Copy / Documentation Drift
-- home page still contains a stale “placeholder until categories API is wired” comment
+### Protected-Route UX
+- protected storefront routes now redirect at the route boundary, but they still rely on a shared sign-in page rather than route-specific explanatory empty states
 
 ---
 
 ## Recommended Next Tasks
 
-1. Tighten storefront auth UX for `/account`, `/account/addresses`, `/checkout`, `/orders`, and `/orders/:id`.
-2. Remove stale placeholder comments and misleading UI affordances after the above behavior is implemented.
+1. Decide whether protected storefront routes should keep redirecting to shared sign-in, or add route-specific unauthenticated explainer states for checkout and orders.
+2. Improve failure-state messaging inside protected pages for non-auth API errors such as suspended accounts or missing order records.
 
 ---
 
