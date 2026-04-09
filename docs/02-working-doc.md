@@ -139,10 +139,11 @@ Implementation note:
 - Storefront product discovery now also exposes URL-driven `minPrice`, `maxPrice`, `inStock`, and `sortBy` controls on `/products`, and preserves the full query state through category changes and pagination
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now includes a client-side create flow with dialog state, controlled form inputs, and list refresh after success
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now also uses the shared alert dialog primitive for delete confirmation, with a pending state during destructive requests
+- Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now surfaces inline load and mutation failures with clearer error states instead of only generic toasts
 - Account settings UI in [`app/(storefront)/account/page.tsx`](../app/(storefront)/account/page.tsx) now includes a password-change form backed by `PATCH /api/users/me/password`
 - Protected storefront customer routes now use a mixed auth experience at the route boundary:
   - account shows a route-specific guest explainer state that preserves `redirectTo=/account`
-  - address pages redirect unauthenticated users to `/sign-in?redirectTo=...`
+  - address pages show a route-specific guest explainer state that preserves `redirectTo=/account/addresses`
   - checkout, orders, and order detail show route-specific guest explainer states that preserve `redirectTo`
 - Account profile and password mutations now surface clearer inline and toast-based failures instead of silently redirecting or returning null on non-auth errors
 - The sign-in page now honors `redirectTo` and returns the customer to their intended storefront route after successful authentication

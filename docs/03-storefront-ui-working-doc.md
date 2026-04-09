@@ -122,7 +122,8 @@ Current caveat:
   - create address in dialog
   - delete address
   - mark address as default
-  - route-level auth redirect to `/sign-in?redirectTo=/account/addresses`
+  - route-specific unauthenticated explainer state that preserves `redirectTo=/account/addresses`
+  - inline load and mutation failure states for address fetches and updates
 
 ### Orders
 - [`app/(storefront)/orders/page.tsx`](../app/(storefront)/orders/page.tsx) supports:
@@ -194,7 +195,7 @@ This means several missing storefront interactions can likely be built without i
 These should be treated as planned follow-up, not as hidden regressions.
 
 ### Protected-Route UX
-- account and address pages still redirect to shared sign-in, while checkout and orders now use route-specific guest explainers instead of an immediate redirect
+- account and address pages now use route-specific guest explainers, while checkout and orders also use explainer states instead of an immediate redirect
 
 ### API Surface
 - the storefront no longer depends on the explicit `by-slug` API routes or the standalone product inventory endpoint
