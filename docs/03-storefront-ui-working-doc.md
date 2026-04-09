@@ -113,7 +113,8 @@ Current caveat:
   - updating display name
   - changing password through `/api/users/me/password`
   - sign out
-  - route-level auth redirect to `/sign-in?redirectTo=/account`
+  - route-specific unauthenticated explainer state that preserves `redirectTo=/account`
+  - clearer inline and toast-based failures for profile load and mutation requests
 
 ### Address Book
 - [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) supports:

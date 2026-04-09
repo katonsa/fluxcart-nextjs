@@ -141,8 +141,10 @@ Implementation note:
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now also uses the shared alert dialog primitive for delete confirmation, with a pending state during destructive requests
 - Account settings UI in [`app/(storefront)/account/page.tsx`](../app/(storefront)/account/page.tsx) now includes a password-change form backed by `PATCH /api/users/me/password`
 - Protected storefront customer routes now use a mixed auth experience at the route boundary:
-  - account and address pages redirect unauthenticated users to `/sign-in?redirectTo=...`
+  - account shows a route-specific guest explainer state that preserves `redirectTo=/account`
+  - address pages redirect unauthenticated users to `/sign-in?redirectTo=...`
   - checkout, orders, and order detail show route-specific guest explainer states that preserve `redirectTo`
+- Account profile and password mutations now surface clearer inline and toast-based failures instead of silently redirecting or returning null on non-auth errors
 - The sign-in page now honors `redirectTo` and returns the customer to their intended storefront route after successful authentication
 - The sign-in and sign-up pages now both call `POST /api/cart/merge` after successful authentication, preserving guest cart items when a shopper authenticates from checkout or another protected route
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`

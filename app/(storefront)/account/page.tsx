@@ -9,9 +9,16 @@ import { authClient } from "@/lib/auth/client"
 import { useRouter } from "next/navigation"
 import type { ApiResponse, ProfileView } from "@/lib/types/api"
 
+interface ApiErrorResponse {
+  success: false
+  statusCode: number
+  message: string
+}
+
 export default function AccountPage() {
   const [profile, setProfile] = useState<ProfileView | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -20,18 +27,34 @@ export default function AccountPage() {
   const router = useRouter()
 
   useEffect(() => {
-    fetch("/api/users/me")
-      .then((res) => res.json() as Promise<ApiResponse<ProfileView>>)
-      .then((res) => {
-        if (res.success) {
-          setProfile(res.data)
-        } else {
-          router.push("/sign-in")
+    const loadProfile = async () => {
+      setLoading(true)
+      setLoadError(null)
+
+      try {
+        const res = await fetch("/api/users/me")
+        const data = (await res.json()) as ApiResponse<ProfileView> | ApiErrorResponse
+
+        if (res.ok && data.success) {
+          setProfile(data.data)
+          return
         }
-      })
-      .catch(() => router.push("/sign-in"))
-      .finally(() => setLoading(false))
-  }, [router])
+
+        setLoadError(
+          data.message ||
+            (res.status === 401
+              ? "Your session expired. Sign in again to continue."
+              : "We could not load your account details right now."),
+        )
+      } catch {
+        setLoadError("We could not load your account details right now.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void loadProfile()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -44,15 +67,21 @@ export default function AccountPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: profile.name }),
       })
-      const data = (await res.json()) as ApiResponse<ProfileView>
-      if (data.success) {
+      const data = (await res.json()) as ApiResponse<ProfileView> | ApiErrorResponse
+
+      if (res.ok && data.success) {
         setProfile(data.data)
         toast.success("Profile updated successfully")
       } else {
-        toast.error(data.message || "Failed to update profile")
+        toast.error(
+          data.message ||
+            (res.status === 401
+              ? "Your session expired while saving. Sign in again."
+              : "We could not save your profile changes."),
+        )
       }
     } catch {
-      toast.error("An error occurred")
+      toast.error("Network error while saving your profile.")
     } finally {
       setSaving(false)
     }
@@ -77,18 +106,23 @@ export default function AccountPage() {
           newPassword,
         }),
       })
-      const data = (await res.json()) as ApiResponse<{ success: true }>
+      const data = (await res.json()) as ApiResponse<{ success: true }> | ApiErrorResponse
 
-      if (data.success) {
+      if (res.ok && data.success) {
         toast.success("Password updated successfully")
         setCurrentPassword("")
         setNewPassword("")
         setConfirmPassword("")
       } else {
-        toast.error(data.message || "Failed to update password")
+        toast.error(
+          data.message ||
+            (res.status === 401
+              ? "Your session expired while changing your password. Sign in again."
+              : "We could not update your password."),
+        )
       }
     } catch {
-      toast.error("An error occurred while updating your password")
+      toast.error("Network error while updating your password.")
     } finally {
       setChangingPassword(false)
     }
@@ -101,6 +135,27 @@ export default function AccountPage() {
   }
 
   if (loading) return <div className="p-8 text-center">Loading profile...</div>
+
+  if (loadError) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="rounded-xl border bg-card p-8 shadow-sm">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            Account unavailable
+          </p>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight">We could not load your account</h1>
+          <p className="mt-4 text-sm leading-6 text-muted-foreground">{loadError}</p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (!profile) return null
 
   return (
