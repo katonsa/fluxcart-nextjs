@@ -138,6 +138,7 @@ Implementation note:
 - Address management UI in [`app/(storefront)/account/addresses/page.tsx`](../app/(storefront)/account/addresses/page.tsx) now also uses the shared alert dialog primitive for delete confirmation, with a pending state during destructive requests
 - Protected storefront customer routes now enforce auth at the route boundary through App Router layouts, redirecting unauthenticated users to `/sign-in?redirectTo=...` before protected client pages fetch data
 - The sign-in page now honors `redirectTo` and returns the customer to their intended storefront route after successful authentication
+- The sign-in and sign-up pages now both call `POST /api/cart/merge` after successful authentication, preserving guest cart items when a shopper authenticates from checkout or another protected route
 - Category management UI in [`app/(admin)/admin/categories/page.tsx`](../app/(admin)/admin/categories/page.tsx) now includes create and edit dialog flows plus row-level delete handling against `/api/categories` and `/api/categories/:id`
 - Product management UI in [`app/(admin)/admin/products/page.tsx`](../app/(admin)/admin/products/page.tsx) now includes create and edit dialog flows, category selection, image URL parsing, and row-level soft delete handling against `/api/products` and `/api/products/:id`
 - Admin order detail UI in [`app/(admin)/admin/orders/[id]/page.tsx`](../app/(admin)/admin/orders/[id]/page.tsx) now uses shared card/select primitives and a structured detail layout instead of ad-hoc blocks and a native select

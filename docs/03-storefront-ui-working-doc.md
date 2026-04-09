@@ -91,6 +91,7 @@ Current note:
   - show subtotal
   - route to checkout
   - show empty-state UI
+  - merge guest cart into authenticated cart after successful sign-in or sign-up
 
 ### Checkout
 - [`app/(storefront)/checkout/page.tsx`](../app/(storefront)/checkout/page.tsx) supports:

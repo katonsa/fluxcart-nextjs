@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { getSafeRedirectTarget, mergeGuestCart } from "@/lib/auth/post-auth"
 
 export default function SignUpPage() {
   const [name, setName] = useState("")
@@ -15,6 +16,8 @@ export default function SignUpPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirectTo = getSafeRedirectTarget(searchParams.get("redirectTo"))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,9 +34,15 @@ export default function SignUpPage() {
     if (error) {
       toast.error(error.message || "Failed to sign up")
     } else {
-      toast.success("Account created successfully")
-      router.push("/")
-      router.refresh()
+      try {
+        await mergeGuestCart()
+      } catch {
+        toast.error("Account created, but we could not merge your guest cart")
+      } finally {
+        toast.success("Account created successfully")
+        router.push(redirectTo)
+        router.refresh()
+      }
     }
   }
 
@@ -90,7 +99,10 @@ export default function SignUpPage() {
 
       <div className="mt-6 text-center text-sm">
         Already have an account?{" "}
-        <Link href="/sign-in" className="font-medium text-primary hover:underline">
+        <Link
+          href={`/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`}
+          className="font-medium text-primary hover:underline"
+        >
           Sign in
         </Link>
       </div>

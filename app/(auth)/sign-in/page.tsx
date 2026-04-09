@@ -8,14 +8,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-
-function getSafeRedirectTarget(redirectTo: string | null) {
-  if (!redirectTo || !redirectTo.startsWith("/") || redirectTo.startsWith("//")) {
-    return "/"
-  }
-
-  return redirectTo
-}
+import { getSafeRedirectTarget, mergeGuestCart } from "@/lib/auth/post-auth"
 
 export default function SignInPage() {
   const [email, setEmail] = useState("")
@@ -39,9 +32,15 @@ export default function SignInPage() {
     if (error) {
       toast.error(error.message || "Failed to sign in")
     } else {
-      toast.success("Signed in successfully")
-      router.push(redirectTo)
-      router.refresh()
+      try {
+        await mergeGuestCart()
+      } catch {
+        toast.error("Signed in, but we could not merge your guest cart")
+      } finally {
+        toast.success("Signed in successfully")
+        router.push(redirectTo)
+        router.refresh()
+      }
     }
   }
 
@@ -86,7 +85,10 @@ export default function SignInPage() {
 
       <div className="mt-6 text-center text-sm">
         Don&apos;t have an account?{" "}
-        <Link href="/sign-up" className="font-medium text-primary hover:underline">
+        <Link
+          href={`/sign-up?redirectTo=${encodeURIComponent(redirectTo)}`}
+          className="font-medium text-primary hover:underline"
+        >
           Sign up
         </Link>
       </div>
